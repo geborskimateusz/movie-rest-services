@@ -16,16 +16,18 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.springframework.http.HttpMethod.GET;
+
+/**
+ * ParameterizedTypeReference is used here , because of List<T>.
+ * RestTemplate can figure out what class to map the JSON responses to.
+ **/
 
 @Slf4j
 @Component
@@ -97,6 +99,7 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
             return ex.getMessage();
         }
     }
+
 
     @Override
     public List<Recommendation> getRecommendations(int movieId) {

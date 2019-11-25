@@ -13,7 +13,6 @@ public class MovieAggregate {
     private final int movieId;
     private final String title;
     private final String genre;
-    private final String address;
     private final List<RecommendationSummary> recommendations;
     private final List<ReviewSummary> reviews;
     private final ServiceAddresses serviceAddresses;
