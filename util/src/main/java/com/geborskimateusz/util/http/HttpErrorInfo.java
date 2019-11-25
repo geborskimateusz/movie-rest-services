@@ -21,4 +21,12 @@ public class HttpErrorInfo {
         this.path = null;
         this.message = null;
     }
+
+
+    public HttpErrorInfo(HttpStatus httpStatus, String path, String message) {
+        timestamp = ZonedDateTime.now();
+        this.httpStatus = httpStatus;
+        this.path = path;
+        this.message = message;
+    }
 }

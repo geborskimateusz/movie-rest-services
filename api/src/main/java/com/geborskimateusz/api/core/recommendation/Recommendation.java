@@ -1,9 +1,11 @@
 package com.geborskimateusz.api.core.recommendation;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
 @Getter
+@Builder
 @AllArgsConstructor
 public class Recommendation {
     private final int movieId;

@@ -1,10 +1,12 @@
 package com.geborskimateusz.api.core.review;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
+@Builder
 public class Review {
     private final int movieId;
     private final int reviewId;

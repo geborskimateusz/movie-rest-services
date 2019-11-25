@@ -12,7 +12,7 @@ public interface MovieService {
      * @return the movie, if found, else null
      */
     @GetMapping(
-            value    = "/product/{movieId}",
+            value    = "/movie/{movieId}",
             produces = "application/json")
-    Movie getProduct(@PathVariable int movieId);
+    Movie getMovie(@PathVariable int movieId);
 }
