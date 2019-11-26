@@ -18,8 +18,7 @@ import java.io.NotActiveException;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.when;
@@ -67,6 +66,10 @@ class BaseMovieCompositeServiceTest {
         MovieAggregate movieAggregate = movieCompositeService.getMovie(given);
 
         assertNotNull(movieAggregate);
+        assertAll(() -> {
+            assertEquals(movie.getMovieId(), movieAggregate.getMovieId());
+            assertEquals(movie.getTitle(), movieAggregate.getTitle());
+        });
     }
 
     @Test
