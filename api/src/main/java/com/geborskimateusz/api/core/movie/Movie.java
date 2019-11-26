@@ -1,9 +1,11 @@
 package com.geborskimateusz.api.core.movie;
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
 
 @Getter
+@Builder
 @AllArgsConstructor
 public class Movie {
     private final int movieId;
