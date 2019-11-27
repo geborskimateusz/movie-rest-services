@@ -54,7 +54,6 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
             @Value("${app.review-service.host}") String reviewServiceHost,
             @Value("${app.review-service.port}") int reviewServicePort
     ) {
-
         this.restTemplate = restTemplate;
         this.mapper = mapper;
 
