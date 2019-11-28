@@ -27,6 +27,7 @@ public class BaseMovieCompositeService implements MovieCompositeService {
     @Override
     public MovieAggregate getMovie(int movieId) {
         Movie movie = movieCompositeIntegration.getMovie(movieId);
+
         if (movie == null) throw new NotFoundException("No movie found for movieId: " + movieId);
 
         List<Recommendation> recommendations = movieCompositeIntegration.getRecommendations(movieId);

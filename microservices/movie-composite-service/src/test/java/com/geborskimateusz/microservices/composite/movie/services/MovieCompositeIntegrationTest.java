@@ -2,6 +2,7 @@ package com.geborskimateusz.microservices.composite.movie.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.geborskimateusz.api.core.movie.Movie;
+import com.geborskimateusz.api.core.recommendation.Recommendation;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -10,16 +11,23 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
+@Disabled
 class MovieCompositeIntegrationTest {
 
 
@@ -65,9 +73,28 @@ class MovieCompositeIntegrationTest {
 
     @Test
     void getRecommendations() {
+        int given = 1;
+
+        List<Recommendation> expected = Arrays.asList(
+                Recommendation.builder().movieId(given).recommendationId(1).author("Author 1").rate(1).content("Content 1").serviceAddress("").build(),
+                Recommendation.builder().movieId(given).recommendationId(2).author("Author 2").rate(2).content("Content 2").serviceAddress("").build(),
+                Recommendation.builder().movieId(given).recommendationId(3).author("Author 3").rate(3).content("Content 3").serviceAddress("").build()
+        );
+
+        String url = recommendationServiceUrl + given;
+
+        ResponseEntity<List<Recommendation>> recommendationsExchange = restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<List<Recommendation>>() {
+                });
+
+        when(recommendationsExchange.getBody()).thenReturn(expected);
+
+        List<Recommendation> actual = movieCompositeIntegration.getRecommendations(given);
+
+        assertNotNull(actual);
     }
 
-    @Test
-    void getReviews() {
-    }
 }
