@@ -1,19 +1,18 @@
 #!/usr/bin/env bash
-#
+
 # Sample usage:
 #
 #   HOST=localhost PORT=7000 ./test-em-all.bash
 #
 : ${HOST=localhost}
-: ${PORT=7000}
+: ${PORT=8080}
 
 function assertCurl() {
 
   local expectedHttpCode=$1
-  local curlCmd="$2  -w \"%{http_code}\""
-  local result=$(eval $curlCmd )
+  local curlCmd="$2 -w \"%{http_code}\""
+  local result=$(eval $curlCmd)
   local httpCode="${result:(-3)}"
-
   RESPONSE='' && (( ${#result} > 3 )) && RESPONSE="${result%???}"
 
   if [ "$httpCode" = "$expectedHttpCode" ]
@@ -45,11 +44,55 @@ function assertEqual() {
     exit 1
   fi
 }
+
+function testUrl() {
+    url=$@
+    if curl $url -ks -f -o /dev/null
+    then
+          echo "Ok"
+          return 0
+    else
+          echo -n "not yet"
+          return 1
+    fi;
+}
+
+function waitForService() {
+    url=$@
+    echo -n "Wait for: $url... "
+    n=0
+    until testUrl $url
+    do
+        n=$((n + 1))
+        if [[ $n == 100 ]]
+        then
+            echo " Give up"
+            exit 1
+        else
+            sleep 6
+            echo -n ", retry #$n "
+        fi
+    done
+}
+
+
 set -e
+
+echo "Start:" `date`
 
 echo "HOST=${HOST}"
 echo "PORT=${PORT}"
 
+if [[ $@ == *"start"* ]]
+then
+    echo "Restarting the test environment..."
+    echo "$ docker-compose down"
+    docker-compose down
+    echo "$ docker-compose up -d"
+    docker-compose up -d
+fi
+
+waitForService http://$HOST:$PORT/movie-composite/1
 
 # Verify that a normal request works, expect three recommendations and three reviews
 assertCurl 200 "curl http://$HOST:$PORT/movie-composite/1 -s"
@@ -80,3 +123,11 @@ assertEqual "\"Invalid movieId: -1\"" "$(echo $RESPONSE | jq .message)"
 assertCurl 400 "curl http://$HOST:$PORT/movie-composite/invalidProductId -s"
 assertEqual "\"Type mismatch.\"" "$(echo $RESPONSE | jq .message)"
 
+if [[ $@ == *"stop"* ]]
+then
+    echo "We are done, stopping the test environment..."
+    echo "$ docker-compose down"
+    docker-compose down
+fi
+
+echo "End:" `date`
