@@ -1,5 +1,56 @@
+api:
+  common:
+    version: 1.0.0
+    title: Movie API
+    description: Simple Movie API for created for purpose of learning microservices.
+    termsOfServiceUrl: MINE TERMS OF SERVICE URL
+    license: License
+    licenseUrl: MY LICENSE URL
+
+  contact:
+    name: Mateusz Geborski
+    url: https://www.linkedin.com/in/mateusz-g%C4%99borski/
+    email: mateuszgeborski@gmail.com
+
+  movie-composite:
+
+    get-composite-movie:
+      description: Returns a composite view of the specified movie id
+      notes: |
+        # Normal response
+        If the requested movie id is found the method will return information regarding:
+        1. Base movie information
+        1. Reviews
+        1. Recommendations
+        1. Service Addresses\n(technical information regarding the addresses of the microservices that created the response)
+
+        # Expected partial and error responses
+        In the following cases, only a partial response be created (used to simplify testing of error conditions)
+
+        ## movie id 113
+        200 - Ok, but no recommendations will be returned
+
+        ## movie id 213
+        200 - Ok, but no reviews will be returned
+
+        ## Non numerical movie id
+        400 - A <b>Bad Request</b> error will be returned
+
+        ## movie id 13
+        404 - A <b>Not Found</b> error will be returned
+
+        ## Negative movie ids
+        422 - An <b>Unprocessable Entity</b> error will be returned
+
+
 server:
   port: 7000
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
 
 app:
   movie-service:
