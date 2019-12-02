@@ -1,1 +1,1 @@
-# movie-rest-services
+# Hands on microservices architecture based on Movies API
