@@ -5,12 +5,14 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.jupiter.api.Assertions.*;
 
 @ExtendWith(SpringExtension.class)
@@ -72,13 +74,48 @@ public class RecommendationRepositoryTest {
     }
 
     @Test
-    void delete() {}
+    void delete() {
+        recommendationRepository.delete(savedRecommendationEntity);
+        assertEquals(0, recommendationRepository.count());
+    }
 
     @Test
-    void duplicateError() {}
+    void duplicateError() {
+
+        RecommendationEntity duplicate = RecommendationEntity.builder().build();
+        duplicate.setId(savedRecommendationEntity.getId());
+
+        assertThrows(DuplicateKeyException.class, () -> {
+            recommendationRepository.save(duplicate);
+        });
+
+
+    }
 
     @Test
-    void optimisticLockError() {}
+    void optimisticLockError() {
+        String r1ConcurrentContent = "r1ConcurrentContent";
+        String r2ConcurrentContent = "r2ConcurrentContent";
+
+        RecommendationEntity r1 = recommendationRepository.findById(savedRecommendationEntity.getId()).get();
+        RecommendationEntity r2 = recommendationRepository.findById(savedRecommendationEntity.getId()).get();
+
+        r1.setContent(r1ConcurrentContent);
+        recommendationRepository.save(r1);
+
+        try {
+            r2.setContent(r2ConcurrentContent);
+            recommendationRepository.save(r2);
+
+            fail("Expected an OptimisticLockingFailureException");
+        }catch (OptimisticLockingFailureException e) {
+            System.out.println("OptimisticLockingFailureException should be throw.");
+        }
+
+        RecommendationEntity updated = recommendationRepository.findById(savedRecommendationEntity.getId()).get();
+        assertEquals(1, (int) updated.getVersion());
+        assertEquals(r1ConcurrentContent, updated.getContent());
+    }
 
     private void assertRecommendation(RecommendationEntity expected, RecommendationEntity actual) {
         assertAll("Executing assertRecommendation(..)", () -> {
