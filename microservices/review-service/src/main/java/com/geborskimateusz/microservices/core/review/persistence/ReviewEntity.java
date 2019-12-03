@@ -1,21 +1,16 @@
 package com.geborskimateusz.microservices.core.review.persistence;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import org.springframework.data.annotation.Id;
+import lombok.*;
 
 import javax.persistence.*;
 
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Getter
 @Setter
 @Entity
-@Table(name = "reviews", indexes = {
-        @Index(name = "reviews_unique_idx", unique = true, columnList = "movieId,reviewId")
-})
+@Table(name = "reviews", indexes = { @Index(name = "reviews_unique_idx", unique = true, columnList = "movieId,reviewId") })
 public class ReviewEntity {
 
     @Id
@@ -32,4 +27,12 @@ public class ReviewEntity {
     private String content;
     private String serviceAddress;
 
+    public ReviewEntity(Integer movieId, Integer reviewId, String author, String subject, String content, String serviceAddress) {
+        this.movieId = movieId;
+        this.reviewId = reviewId;
+        this.author = author;
+        this.subject = subject;
+        this.content = content;
+        this.serviceAddress = serviceAddress;
+    }
 }
