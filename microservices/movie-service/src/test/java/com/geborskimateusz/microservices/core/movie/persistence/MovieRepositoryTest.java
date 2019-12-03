@@ -1,16 +1,22 @@
 package com.geborskimateusz.microservices.core.movie.persistence;
 
-import com.geborskimateusz.microservices.core.movie.service.BaseMovieService;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -105,7 +111,55 @@ public class MovieRepositoryTest {
         MovieEntity updatedMovieEntity = movieRepository.findById(savedMovieEntity.getId()).get();
         assertEquals(1, (int) updatedMovieEntity.getVersion());
         assertEquals(concurrentM1actionData, updatedMovieEntity.getTitle());
+    }
 
+    @Test
+    void delete() {
+        movieRepository.delete(savedMovieEntity);
+        assertEquals(0, movieRepository.count());
+    }
+
+    @Test
+    void duplicateMovieError() {
+        MovieEntity duplicate = MovieEntity.builder().build();
+        duplicate.setId(savedMovieEntity.getId());
+
+        assertThrows(DuplicateKeyException.class, () -> movieRepository.save(duplicate));
+    }
+
+    @Test
+    void paging() {
+
+        bulkSaveMovie();
+
+        Pageable nextPage = PageRequest.of(0, 4, Sort.Direction.ASC, "movieId");
+
+        nextPage = verifyPages(nextPage, "[1, 2, 3, 4]", true);
+        nextPage = verifyPages(nextPage, "[5, 6, 7, 8]", true);
+        verifyPages(nextPage, "[9, 10]", false);
+
+    }
+
+    private Pageable verifyPages(Pageable nextPage, String idsAsString, boolean hasNext) {
+        Page<MovieEntity> moviePage = movieRepository.findAll(nextPage);
+        assertEquals(hasNext, moviePage.hasNext());
+
+        String ids = moviePage.get().map(MovieEntity::getMovieId).collect(Collectors.toList()).toString();
+        assertEquals(idsAsString, ids);
+        return nextPage.next();
+    }
+
+    private void bulkSaveMovie() {
+        movieRepository.deleteAll();
+
+        List<MovieEntity> movies = IntStream.rangeClosed(1, 10)
+                .mapToObj(i -> MovieEntity.builder()
+                        .movieId(i)
+                        .title("Movie nr: " + i)
+                        .build())
+                .collect(Collectors.toList());
+
+        movieRepository.saveAll(movies);
     }
 
 
