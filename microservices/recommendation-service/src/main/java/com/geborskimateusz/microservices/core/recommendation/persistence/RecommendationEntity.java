@@ -1,9 +1,6 @@
 package com.geborskimateusz.microservices.core.recommendation.persistence;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
@@ -11,6 +8,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Getter
 @Setter
 @Document(collection="recommendations")
@@ -28,4 +26,14 @@ public class RecommendationEntity {
     private Integer rate;
     private String content;
     private String serviceAddress;
+
+    @Builder
+    public RecommendationEntity(Integer movieId, Integer recommendationId, String author, Integer rate, String content, String serviceAddress) {
+        this.movieId = movieId;
+        this.recommendationId = recommendationId;
+        this.author = author;
+        this.rate = rate;
+        this.content = content;
+        this.serviceAddress = serviceAddress;
+    }
 }

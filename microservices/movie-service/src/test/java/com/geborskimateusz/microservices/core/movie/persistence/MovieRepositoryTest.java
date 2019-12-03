@@ -164,7 +164,7 @@ public class MovieRepositoryTest {
 
 
     private void assertEqualsMovie(MovieEntity expected, MovieEntity actual) {
-        assertAll("Executing assertEqualsMovie.", () -> {
+        assertAll("Executing assertEqualsMovie(..)", () -> {
             assertEquals(expected.getId(), actual.getId());
             assertEquals(expected.getVersion(), actual.getVersion());
             assertEquals(expected.getMovieId(), actual.getMovieId());
