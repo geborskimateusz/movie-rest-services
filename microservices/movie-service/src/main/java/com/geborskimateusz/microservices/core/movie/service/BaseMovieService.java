@@ -7,7 +7,6 @@ import com.geborskimateusz.util.exceptions.NotFoundException;
 import com.geborskimateusz.util.http.ServiceUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
