@@ -21,32 +21,37 @@ import java.util.Collections;
 public class SwaggerConfig {
 
     @Value("${api.common.version}")
-    private String commonVersion;
+    String commonVersion;
 
     @Value("${api.common.title}")
-    private String commonTitle;
+    String commonTitle;
 
     @Value("${api.common.description}")
-    private String commonDescription;
+    String commonDescription;
 
     @Value("${api.common.termsOfServiceUrl}")
-    private String commonTermsOfServiceUrl;
+    String commonTermsOfServiceUrl;
 
     @Value("${api.common.license}")
-    private String commonLicense;
+    String commonLicense;
 
     @Value("${api.common.licenseUrl}")
-    private String commonLicenseUrl;
+    String commonLicenseUrl;
 
     @Value("${api.contact.name}")
-    private String contactName;
+    String contactName;
 
     @Value("${api.contact.url}")
-    private String contactUrl;
+    String contactUrl;
 
     @Value("${api.contact.email}")
-    private String contactEmail;
+    String contactEmail;
 
+    /**
+     * Will exposed on $HOST:$PORT/swagger-ui.html
+     *
+     * @return
+     */
     @Bean
     public Docket apiDocumentation() {
         return new Docket(DocumentationType.SWAGGER_2)
