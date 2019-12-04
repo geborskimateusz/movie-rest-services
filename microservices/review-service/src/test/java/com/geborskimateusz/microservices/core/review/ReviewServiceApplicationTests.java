@@ -10,7 +10,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
+        "spring.datasource.url=jdbc:h2:mem:review-db"})
 public class ReviewServiceApplicationTests {
 
     @Autowired
@@ -36,14 +37,14 @@ public class ReviewServiceApplicationTests {
 
     @Test
     public void getReviewsThrowsInvalidInputException() {
-		int given = 0;
+        int given = 0;
 
-		webTestClient.get()
-				.uri("/review?movieId=" + given)
-				.accept(MediaType.APPLICATION_JSON_UTF8)
-				.exchange()
-				.expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
-				.expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8);
+        webTestClient.get()
+                .uri("/review?movieId=" + given)
+                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .exchange()
+                .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
+                .expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8);
     }
 
 }

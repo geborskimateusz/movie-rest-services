@@ -44,6 +44,8 @@ public class RecommendationRepositoryTest {
 
     @Test
     void create() {
+        recommendationRepository.deleteAll();
+
         RecommendationEntity recommendationEntity = RecommendationEntity.builder()
                 .recommendationId(BASE_RECOMMENDATION_ID)
                 .movieId(BASE_MOVIE_ID)

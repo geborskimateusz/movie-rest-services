@@ -52,6 +52,7 @@ class ReviewRepositoryTest {
 
     @Test
     void create() {
+        reviewRepository.deleteAll();
 
         ReviewEntity reviewEntity = ReviewEntity.builder()
                 .movieId(BASE_MOVIE_ID)
