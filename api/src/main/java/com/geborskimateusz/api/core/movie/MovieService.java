@@ -1,7 +1,6 @@
 package com.geborskimateusz.api.core.movie;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.*;
 
 public interface MovieService {
 
@@ -15,4 +14,26 @@ public interface MovieService {
             value    = "/movie/{movieId}",
             produces = "application/json")
     Movie getMovie(@PathVariable int movieId);
+
+    /**
+     * Sample usage:
+     *
+     * curl -X POST $HOST:$PORT/movie \
+     *   -H "Content-Type: application/json" --data \
+     *   '{"movieId":123,"name":"movie 123", ...}'
+     *
+     * @param movie
+     * @return
+     */
+    Movie createMovie(@RequestBody Movie movie);
+
+    /**
+     * Sample usage:
+     *
+     * curl -X DELETE $HOST:$PORT/movie/1
+     *
+     * @param movieId
+     */
+    @DeleteMapping(value = "/movie/${movieId}")
+    void deleteMovie(@PathVariable  Integer movieId);
 }
