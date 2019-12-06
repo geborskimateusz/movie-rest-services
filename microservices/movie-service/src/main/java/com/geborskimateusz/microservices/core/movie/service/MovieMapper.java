@@ -5,12 +5,15 @@ import com.geborskimateusz.microservices.core.movie.persistence.MovieEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
+import org.mapstruct.factory.Mappers;
 
 @Mapper(componentModel = "spring")
 public interface MovieMapper {
 
+    MovieMapper INSTANCE = Mappers.getMapper(MovieMapper.class);
+
     @Mappings({
-            @Mapping(target = "serviceAddress", ignore = true)
+            @Mapping(target = "address", ignore = true)
     })
     Movie entityToApi(MovieEntity entity);
 

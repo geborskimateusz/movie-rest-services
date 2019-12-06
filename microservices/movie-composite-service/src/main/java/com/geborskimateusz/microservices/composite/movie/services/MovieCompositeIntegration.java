@@ -63,7 +63,7 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
     }
 
     @Override
-    public Movie getMovie(int movieId) {
+    public Movie getMovie(Integer movieId) {
         try {
             String url = movieServiceUrl + movieId;
             log.debug("Will call getMovie API on URL: {}", url);
@@ -145,5 +145,35 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
             log.warn("Got an exception while requesting reviews, return zero reviews: {}", ex.getMessage());
             return new ArrayList<>();
         }
+    }
+
+    @Override
+    public Movie createMovie(Movie movie) {
+        return null;
+    }
+
+    @Override
+    public void deleteMovie(Integer movieId) {
+
+    }
+
+    @Override
+    public Recommendation createRecommendation(Recommendation recommendation) {
+        return null;
+    }
+
+    @Override
+    public void deleteRecommendations(int movieId) {
+
+    }
+
+    @Override
+    public Review createReview(Review review) {
+        return null;
+    }
+
+    @Override
+    public void deleteReviews(int movieId) {
+
     }
 }

@@ -42,4 +42,14 @@ public class BaseReviewService implements ReviewService {
 
         return list;
     }
+
+    @Override
+    public Review createReview(Review review) {
+        return null;
+    }
+
+    @Override
+    public void deleteReviews(int movieId) {
+
+    }
 }

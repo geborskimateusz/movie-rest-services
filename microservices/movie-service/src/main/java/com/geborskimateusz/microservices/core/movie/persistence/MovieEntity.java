@@ -7,6 +7,8 @@ import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Getter
 @Setter
 @Document(collection = "products")
@@ -24,12 +26,4 @@ public class MovieEntity {
     private String title;
     private String genre;
     private String address;
-
-    @Builder
-    public MovieEntity(Integer movieId, String title, String genre, String address) {
-        this.movieId = movieId;
-        this.title = title;
-        this.genre = genre;
-        this.address = address;
-    }
 }

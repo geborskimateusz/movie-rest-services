@@ -46,4 +46,14 @@ public class BaseRecommendationService implements RecommendationService {
 
         return list;
     }
+
+    @Override
+    public Recommendation createRecommendation(Recommendation recommendation) {
+        return null;
+    }
+
+    @Override
+    public void deleteRecommendations(int movieId) {
+
+    }
 }
