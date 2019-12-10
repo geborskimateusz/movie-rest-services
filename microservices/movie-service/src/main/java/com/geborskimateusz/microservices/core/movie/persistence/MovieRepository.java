@@ -6,5 +6,5 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 import java.util.Optional;
 
 public interface MovieRepository extends PagingAndSortingRepository<MovieEntity, String> {
-    Optional<MovieEntity> findMovieById(Integer movieId);
+    Optional<MovieEntity> findByMovieId(Integer movieId);
 }

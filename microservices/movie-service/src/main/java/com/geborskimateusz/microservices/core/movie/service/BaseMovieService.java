@@ -33,13 +33,13 @@ public class BaseMovieService implements MovieService {
 
         if (movieId < 1) throw new InvalidInputException("Invalid productId: " + movieId);
 
-        MovieEntity movieEntity = movieRepository.findMovieById(movieId)
+        MovieEntity movieEntity = movieRepository.findByMovieId(movieId)
                 .orElseThrow(() -> new NotFoundException("No product found for productId: " + movieId));
 
         Movie movie = movieMapper.entityToApi(movieEntity);
         movie.setAddress(serviceUtil.getServiceAddress());
 
-        log.debug("/movie return the found movie for movieId={}", movieId);
+        log.debug("movie return the found movie for movieId={}", movieId);
 
         return movie;
     }
