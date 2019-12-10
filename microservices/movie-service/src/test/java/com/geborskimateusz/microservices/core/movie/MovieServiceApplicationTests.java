@@ -2,7 +2,9 @@ package com.geborskimateusz.microservices.core.movie;
 
 import com.geborskimateusz.api.core.movie.Movie;
 import com.geborskimateusz.api.core.movie.MovieService;
+import com.geborskimateusz.microservices.core.movie.persistence.MovieEntity;
 import com.geborskimateusz.microservices.core.movie.persistence.MovieRepository;
+import io.swagger.models.auth.In;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,7 +18,10 @@ import reactor.core.publisher.Mono;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.times;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
+import static org.mockito.Mockito.verify;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = RANDOM_PORT, properties = {"spring.data.mongodb.port: 0"})
@@ -55,9 +60,8 @@ public class MovieServiceApplicationTests {
         assertFalse(movieRepository.findByMovieId(requested).isPresent());
 
         getAndVerify(requested, HttpStatus.NOT_FOUND)
-                .jsonPath("$.message").isEqualTo("No product found for productId: " + requested);
+                .jsonPath("$.message").isEqualTo("No movie found for movieId: " + requested);
     }
-
 
 
     @Test
@@ -67,7 +71,7 @@ public class MovieServiceApplicationTests {
         postAndVerify(given, HttpStatus.OK);
 
         getAndVerify(given, HttpStatus.UNPROCESSABLE_ENTITY)
-                .jsonPath("$.message").isEqualTo("Invalid productId: "  + given);
+                .jsonPath("$.message").isEqualTo("Invalid movieId: " + given);
     }
 
 
@@ -81,7 +85,13 @@ public class MovieServiceApplicationTests {
     //TODO
     @Test
     public void deleteMovie() {
-        //deleteAndVerify
+        Integer given = 1;
+
+        postAndVerify(given, HttpStatus.OK);
+
+        assertTrue(movieRepository.findByMovieId(given).isPresent());
+
+        deleteAndVerify(given, HttpStatus.OK);
     }
 
 
@@ -107,7 +117,7 @@ public class MovieServiceApplicationTests {
         return getAndVerify(id.toString(), httpStatus);
     }
 
-        private WebTestClient.BodyContentSpec getAndVerify(String id, HttpStatus httpStatus) {
+    private WebTestClient.BodyContentSpec getAndVerify(String id, HttpStatus httpStatus) {
         return webTestClient.get()
                 .uri("/movie/" + id)
                 .accept(MediaType.APPLICATION_JSON_UTF8)
@@ -116,6 +126,15 @@ public class MovieServiceApplicationTests {
                 .expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8)
                 .expectBody();
     }
+
+    private WebTestClient.BodyContentSpec deleteAndVerify(Integer id, HttpStatus httpStatus) {
+        return webTestClient.delete()
+                .uri("/movie/" + id)
+                .exchange()
+                .expectStatus().isEqualTo(httpStatus)
+                .expectBody();
+    }
+
 
     @AfterEach
     void tearDown() {

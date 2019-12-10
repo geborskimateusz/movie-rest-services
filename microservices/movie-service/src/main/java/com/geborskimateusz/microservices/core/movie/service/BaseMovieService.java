@@ -31,10 +31,10 @@ public class BaseMovieService implements MovieService {
     @Override
     public Movie getMovie(Integer movieId) {
 
-        if (movieId < 1) throw new InvalidInputException("Invalid productId: " + movieId);
+        if (movieId < 1) throw new InvalidInputException("Invalid movieId: " + movieId);
 
         MovieEntity movieEntity = movieRepository.findByMovieId(movieId)
-                .orElseThrow(() -> new NotFoundException("No product found for productId: " + movieId));
+                .orElseThrow(() -> new NotFoundException("No movie found for movieId: " + movieId));
 
         Movie movie = movieMapper.entityToApi(movieEntity);
         movie.setAddress(serviceUtil.getServiceAddress());
@@ -62,6 +62,7 @@ public class BaseMovieService implements MovieService {
 
     @Override
     public void deleteMovie(Integer movieId) {
-
+        if (movieId < 1) throw new InvalidInputException("Invalid movieId: " + movieId);
+        movieRepository.findByMovieId(movieId).ifPresent(movieRepository::delete);
     }
 }
