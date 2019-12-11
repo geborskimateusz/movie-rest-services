@@ -8,10 +8,10 @@ import lombok.Getter;
 @Builder
 @AllArgsConstructor
 public class Recommendation {
-    private final int movieId;
-    private final int recommendationId;
+    private final Integer movieId;
+    private final Integer recommendationId;
     private final String author;
-    private final int rate;
+    private final Integer rate;
     private final String content;
     private final String serviceAddress;
 
