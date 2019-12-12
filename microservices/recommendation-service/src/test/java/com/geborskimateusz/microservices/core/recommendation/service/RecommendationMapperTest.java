@@ -103,7 +103,6 @@ class RecommendationMapperTest {
                 .author(FAKE_AUTHOR)
                 .rate(RATE)
                 .serviceAddress(SERVICE_ADDRESS)
-                .version(VERSION)
                 .build();
     }
 }

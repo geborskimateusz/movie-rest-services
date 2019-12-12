@@ -3,8 +3,10 @@ package com.geborskimateusz.api.core.recommendation;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
+@Setter
 @Builder
 @AllArgsConstructor
 public class Recommendation {
@@ -13,7 +15,7 @@ public class Recommendation {
     private final String author;
     private final Integer rate;
     private final String content;
-    private final String serviceAddress;
+    private String serviceAddress;
 
     public Recommendation() {
         movieId = 0;
