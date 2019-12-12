@@ -12,6 +12,7 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.persistence.EntityManager;
 import java.util.List;
 
 import static org.apache.logging.log4j.ThreadContext.isEmpty;
@@ -31,6 +32,9 @@ class ReviewRepositoryTest {
     ReviewRepository reviewRepository;
 
     ReviewEntity savedReviewEntity;
+
+    @Autowired
+    EntityManager entityManager;
 
     @BeforeEach
     void setUp() {
@@ -104,13 +108,15 @@ class ReviewRepositoryTest {
 
     }
 
-    //TODO Exception not thrown.
+
+    //TODO, posted on StackOverflow
     @Disabled
     @Test
     void onDuplicate() {
 
-        ReviewEntity duplicated = ReviewEntity.builder().build();
-        duplicated.setId(savedReviewEntity.getId());
+        ReviewEntity duplicated = savedReviewEntity;
+
+        assertEquals(savedReviewEntity.getId(), duplicated.getId());
 
         assertThrows(DataIntegrityViolationException.class, () -> {
             reviewRepository.save(duplicated);
@@ -134,7 +140,7 @@ class ReviewRepositoryTest {
             reviewRepository.save(r2);
 
             fail("Expected an OptimisticLockingFailureException");
-        }catch (OptimisticLockingFailureException e) {
+        } catch (OptimisticLockingFailureException e) {
             System.out.println("OptimisticLockingFailureException should be throw.");
         }
 

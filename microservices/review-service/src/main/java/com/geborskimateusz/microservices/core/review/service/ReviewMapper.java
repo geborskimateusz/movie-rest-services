@@ -5,11 +5,14 @@ import com.geborskimateusz.microservices.core.review.persistence.ReviewEntity;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
+import org.mapstruct.factory.Mappers;
 
 import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface ReviewMapper {
+
+    ReviewMapper INSTANCE = Mappers.getMapper(ReviewMapper.class);
 
     @Mappings({
             @Mapping(target = "serviceAddress", ignore = true)
