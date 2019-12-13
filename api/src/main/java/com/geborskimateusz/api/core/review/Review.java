@@ -3,8 +3,10 @@ package com.geborskimateusz.api.core.review;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 
 @Getter
+@Setter
 @AllArgsConstructor
 @Builder
 public class Review {
@@ -13,7 +15,7 @@ public class Review {
     private final String author;
     private final String subject;
     private final String content;
-    private final String serviceAddress;
+    private String serviceAddress;
 
     public Review() {
         movieId = 0;

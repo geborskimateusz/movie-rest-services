@@ -67,9 +67,7 @@ class ReviewMapperTest {
         List<Review> reviews = Collections.singletonList(getApi());
         List<ReviewEntity> reviewEntities = mapper.apiListToEntityList(reviews);
 
-        Review api = reviews.get(0);
         ReviewEntity entity = reviewEntities.get(0);
-
 
         assertThat(reviewEntities.size(), equalTo(1));
         assertNull(entity.getId());
