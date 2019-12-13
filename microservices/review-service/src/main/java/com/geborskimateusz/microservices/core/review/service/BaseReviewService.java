@@ -61,6 +61,7 @@ public class BaseReviewService implements ReviewService {
 
     @Override
     public void deleteReviews(int movieId) {
-
+        log.debug("deleteReviews: tries to delete reviews for the movie with movieId: {}", movieId);
+        reviewRepository.deleteAll(reviewRepository.findByMovieId(movieId));
     }
 }

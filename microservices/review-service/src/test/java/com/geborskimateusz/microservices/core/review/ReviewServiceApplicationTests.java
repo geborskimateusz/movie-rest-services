@@ -2,7 +2,7 @@ package com.geborskimateusz.microservices.core.review;
 
 import com.geborskimateusz.api.core.review.Review;
 import com.geborskimateusz.microservices.core.review.persistence.ReviewRepository;
-import io.swagger.models.auth.In;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,9 +12,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-import static org.hamcrest.CoreMatchers.equalTo;
-import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static reactor.core.publisher.Mono.just;
 
 @ExtendWith(SpringExtension.class)
@@ -27,10 +26,6 @@ public class ReviewServiceApplicationTests {
 
     @Autowired
     ReviewRepository reviewRepository;
-
-    @Test
-    public void contextLoads() {
-    }
 
     @Test
     public void getReviews() {
@@ -59,6 +54,64 @@ public class ReviewServiceApplicationTests {
 
         getAndVerify(movieId, HttpStatus.BAD_REQUEST)
                 .jsonPath("$.message").isEqualTo("Type mismatch.");
+    }
+
+    @Test
+    public void createReview() {
+        String movieId = "1";
+        String reviewId = "2";
+
+        postAndVerify(movieId, reviewId, HttpStatus.OK);
+
+        assertEquals(1, reviewRepository.count());
+
+        getAndVerify(movieId, HttpStatus.OK)
+                .jsonPath("$.length()").isEqualTo(1)
+                .jsonPath("$[0].reviewId").isEqualTo(reviewId)
+                .jsonPath("$[0].movieId").isEqualTo(movieId);
+    }
+
+    @Test
+    public void createReviewDataIntegrityViolationException() {
+        String movieId = "1";
+        String reviewId = "2";
+
+        postAndVerify(movieId, reviewId, HttpStatus.OK);
+
+        assertEquals(1, reviewRepository.count());
+
+        getAndVerify(movieId, HttpStatus.OK)
+                .jsonPath("$.length()").isEqualTo(1)
+                .jsonPath("$[0].reviewId").isEqualTo(reviewId)
+                .jsonPath("$[0].movieId").isEqualTo(movieId);
+
+        postAndVerify(movieId, reviewId, HttpStatus.UNPROCESSABLE_ENTITY)
+                .jsonPath("$.message").isEqualTo("Duplicate key, Movie Id: " + movieId + ", Review Id:" + reviewId);
+
+        assertEquals(1, reviewRepository.count());
+    }
+
+    @Test
+    public void deleteReviews() {
+        String movieId = "1";
+
+        postAndVerify(movieId, "2", HttpStatus.OK);
+        postAndVerify(movieId, "3", HttpStatus.OK);
+
+        assertEquals(2, reviewRepository.count());
+
+        deleteAndVerify(movieId, HttpStatus.OK);
+
+        assertEquals(0, reviewRepository.count());
+    }
+
+    public WebTestClient.BodyContentSpec deleteAndVerify(String movieId, HttpStatus status) {
+        return webTestClient.delete()
+                .uri("/review?movieId="+movieId)
+                .accept(MediaType.APPLICATION_JSON_UTF8)
+                .exchange()
+                .expectStatus().isEqualTo(status)
+                .expectBody();
     }
 
     public WebTestClient.BodyContentSpec postAndVerify(String movieId, String reviewId, HttpStatus httpStatus) {
@@ -91,4 +144,8 @@ public class ReviewServiceApplicationTests {
                 .expectBody();
     }
 
+    @AfterEach
+    public void cleanUp() {
+        reviewRepository.deleteAll();
+    }
 }
