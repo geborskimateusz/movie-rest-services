@@ -81,4 +81,14 @@ public class BaseMovieCompositeService implements MovieCompositeService {
                 .serviceAddresses(serviceAddresses)
                 .build();
     }
+
+    @Override
+    public MovieAggregate createCompositeMovie(MovieAggregate body) {
+        return null;
+    }
+
+    @Override
+    public void deleteCompositeMovie(int movieId) {
+
+    }
 }

@@ -42,6 +42,24 @@ api:
         ## Negative movie ids
         422 - An <b>Unprocessable Entity</b> error will be returned
 
+    create-composite-movie:
+      description: Creates a composite movie
+      notes: |
+        # Normal response
+        The composite movie information posted to the API will be splitted up and stored as separate movie-info, recommendation and review entities.
+
+        # Expected error responses
+        1. If a movie with the same movieId as specified in the posted information already exists,
+           an <b>422 - Unprocessable Entity</b> error with a "duplicate key" error message will be returned
+
+    delete-composite-movie:
+      description: Deletes a composite movie
+      notes: |
+        # Normal response
+                Entities for movie information, recommendations and reviews related to the specificed movieId will be deleted.
+                The implementation of the delete method is idempotent, i.e. it can be called several times with the same response.
+                This means that a delete request of a non existing movie will return <b>200 Ok</b>.
+
 
 server:
   port: 7000
