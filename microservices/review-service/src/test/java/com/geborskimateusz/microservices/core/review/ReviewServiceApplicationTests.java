@@ -47,14 +47,18 @@ public class ReviewServiceApplicationTests {
 
     @Test
     public void getReviewsThrowsInvalidInputException() {
-        int given = 0;
+        String movieId = "-1";
 
-        webTestClient.get()
-                .uri("/review?movieId=" + given)
-                .accept(MediaType.APPLICATION_JSON_UTF8)
-                .exchange()
-                .expectStatus().isEqualTo(HttpStatus.UNPROCESSABLE_ENTITY)
-                .expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8);
+        getAndVerify(movieId, HttpStatus.UNPROCESSABLE_ENTITY)
+                .jsonPath("$.message").isEqualTo("Invalid productId: " + movieId);
+    }
+
+    @Test
+    public void getReviewsMissingParameter() {
+        String movieId = "";
+
+        getAndVerify(movieId, HttpStatus.BAD_REQUEST)
+                .jsonPath("$.message").isEqualTo("Type mismatch.");
     }
 
     public WebTestClient.BodyContentSpec postAndVerify(String movieId, String reviewId, HttpStatus httpStatus) {
