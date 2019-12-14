@@ -3,12 +3,16 @@ package com.geborskimateusz.api.composite.movie;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @Getter
 @Builder
 @AllArgsConstructor
+@NoArgsConstructor
 public class ReviewSummary {
-    private final int reviewId;
-    private final String author;
-    private final String subject;
+    private int reviewId;
+    private String author;
+    private String subject;
+    private String content;
+
 }

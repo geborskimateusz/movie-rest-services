@@ -1,20 +1,17 @@
 package com.geborskimateusz.microservices.composite.movie.services;
 
 import com.geborskimateusz.api.composite.movie.MovieAggregate;
-import com.geborskimateusz.api.composite.movie.MovieCompositeService;
 import com.geborskimateusz.api.core.movie.Movie;
 import com.geborskimateusz.api.core.recommendation.Recommendation;
 import com.geborskimateusz.api.core.review.Review;
 import com.geborskimateusz.util.exceptions.NotFoundException;
 import com.geborskimateusz.util.http.ServiceUtil;
-import org.junit.Before;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.io.NotActiveException;
 import java.util.Arrays;
 import java.util.List;
 
@@ -63,7 +60,7 @@ class BaseMovieCompositeServiceTest {
         when(movieCompositeIntegration.getRecommendations(movie.getMovieId())).thenReturn(recommendations);
         when(movieCompositeIntegration.getReviews(movie.getMovieId())).thenReturn(reviews);
 
-        MovieAggregate movieAggregate = movieCompositeService.getMovie(given);
+        MovieAggregate movieAggregate = movieCompositeService.getCompositeMovie(given);
 
         assertNotNull(movieAggregate);
         assertAll(() -> {
@@ -78,6 +75,6 @@ class BaseMovieCompositeServiceTest {
 
         when(movieCompositeIntegration.getMovie(anyInt())).thenThrow(NotFoundException.class);
 
-        assertThrows(NotFoundException.class, () -> movieCompositeService.getMovie(given));
+        assertThrows(NotFoundException.class, () -> movieCompositeService.getCompositeMovie(given));
     }
 }

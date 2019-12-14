@@ -74,31 +74,32 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
             return movie;
 
         } catch (HttpClientErrorException ex) {
-
-            switch (ex.getStatusCode()) {
-
-                case NOT_FOUND:
-                    throw new NotFoundException(getErrorMessage(ex));
-
-                case UNPROCESSABLE_ENTITY:
-                    throw new InvalidInputException(getErrorMessage(ex));
-
-                default:
-                    log.warn("Got a unexpected HTTP error: {}, will rethrow it", ex.getStatusCode());
-                    log.warn("Error body: {}", ex.getResponseBodyAsString());
-                    throw ex;
-            }
+            throw handleHttpClientException(ex);
         }
     }
 
-    private String getErrorMessage(HttpClientErrorException ex) {
+    @Override
+    public Movie createMovie(Movie movie) {
         try {
-            return mapper.readValue(ex.getResponseBodyAsString(), HttpErrorInfo.class).getMessage();
-        } catch (IOException ioex) {
-            return ex.getMessage();
+
+            String url = movieServiceUrl;
+            log.debug("Will post Movie to {}", url );
+
+            Movie posted = restTemplate.postForObject(url, movie, Movie.class);
+            log.debug("Created movie with id: {}", posted.getMovieId());
+
+            return posted;
+
+
+        }catch (HttpClientErrorException ex) {
+            throw handleHttpClientException(ex);
         }
     }
 
+    @Override
+    public void deleteMovie(Integer movieId) {
+
+    }
 
     @Override
     public List<Recommendation> getRecommendations(int movieId) {
@@ -126,6 +127,29 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
     }
 
     @Override
+    public Recommendation createRecommendation(Recommendation recommendation) {
+        try {
+
+            String url = recommendationServiceUrl;
+            log.debug("Will post Recommendation to {}", url );
+
+            Recommendation posted = restTemplate.postForObject(url, recommendation, Recommendation.class);
+            log.debug("Created movie with id: {}", posted.getRecommendationId());
+
+            return posted;
+
+
+        }catch (HttpClientErrorException ex) {
+            throw handleHttpClientException(ex);
+        }
+    }
+
+    @Override
+    public void deleteRecommendations(int movieId) {
+
+    }
+
+    @Override
     public List<Review> getReviews(int movieId) {
         try {
             String url = reviewServiceUrl + movieId;
@@ -148,26 +172,6 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
     }
 
     @Override
-    public Movie createMovie(Movie movie) {
-        return null;
-    }
-
-    @Override
-    public void deleteMovie(Integer movieId) {
-
-    }
-
-    @Override
-    public Recommendation createRecommendation(Recommendation recommendation) {
-        return null;
-    }
-
-    @Override
-    public void deleteRecommendations(int movieId) {
-
-    }
-
-    @Override
     public Review createReview(Review review) {
         return null;
     }
@@ -175,5 +179,29 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
     @Override
     public void deleteReviews(int movieId) {
 
+    }
+
+    private String getErrorMessage(HttpClientErrorException ex) {
+        try {
+            return mapper.readValue(ex.getResponseBodyAsString(), HttpErrorInfo.class).getMessage();
+        } catch (IOException ioex) {
+            return ex.getMessage();
+        }
+    }
+
+    private RuntimeException handleHttpClientException(HttpClientErrorException ex) {
+        switch (ex.getStatusCode()) {
+
+            case NOT_FOUND:
+                throw new NotFoundException(getErrorMessage(ex));
+
+            case UNPROCESSABLE_ENTITY:
+                throw new InvalidInputException(getErrorMessage(ex));
+
+            default:
+                log.warn("Got a unexpected HTTP error: {}, will rethrow it", ex.getStatusCode());
+                log.warn("Error body: {}", ex.getResponseBodyAsString());
+                throw ex;
+        }
     }
 }
