@@ -98,7 +98,15 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
 
     @Override
     public void deleteMovie(Integer movieId) {
+        try {
+            String url = movieServiceUrl + movieId;
+            log.debug("Trying to delete Movie on url: {}", url);
 
+            restTemplate.delete(url);
+
+        }catch (HttpClientErrorException ex) {
+            throw handleHttpClientException(ex);
+        }
     }
 
     @Override

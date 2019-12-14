@@ -1,14 +1,12 @@
 package com.geborskimateusz.api.core.movie;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Setter
 @Getter
 @Builder
 @AllArgsConstructor
+@ToString
 public class Movie {
     private int movieId;
     private String title;

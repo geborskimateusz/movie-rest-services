@@ -42,46 +42,12 @@ public class BaseMovieCompositeService implements MovieCompositeService {
     @Override
     public void createCompositeMovie(MovieAggregate body) {
         try {
+
             log.debug("createCompositeMovie: Trying to create new Movie Entity for movieId: {} ", body.getMovieId());
 
-            Movie movie = Movie.builder()
-                    .movieId(body.getMovieId())
-                    .genre(body.getGenre())
-                    .title(body.getTitle())
-                    .address(null)
-                    .build();
-
-            movieCompositeIntegration.createMovie(movie);
-
-            if (body.getRecommendations() != null) {
-                body.getRecommendations().forEach(recommendationSummary -> {
-                    Recommendation recommendation = Recommendation.builder()
-                            .recommendationId(recommendationSummary.getRecommendationId())
-                            .movieId(movie.getMovieId())
-                            .author(recommendationSummary.getAuthor())
-                            .content(recommendationSummary.getContent())
-                            .rate(recommendationSummary.getRate())
-                            .serviceAddress(null)
-                            .build();
-
-                    movieCompositeIntegration.createRecommendation(recommendation);
-                });
-            }
-
-            if (body.getReviews() != null) {
-                body.getReviews().forEach(reviewSummary -> {
-                    Review review = Review.builder()
-                            .reviewId(reviewSummary.getReviewId())
-                            .movieId(movie.getMovieId())
-                            .subject(reviewSummary.getSubject())
-                            .content(reviewSummary.getContent())
-                            .author(reviewSummary.getAuthor())
-                            .serviceAddress(null)
-                            .build();
-
-                    movieCompositeIntegration.createReview(review);
-                });
-            }
+            createMovieFromBody(body);
+            createRecommendationsFromBody(body);
+            createReviewsFromBody(body);
 
         }catch (RuntimeException ex) {
             log.warn("createCompositeMovie failed", ex);
@@ -140,5 +106,50 @@ public class BaseMovieCompositeService implements MovieCompositeService {
                 .reviews(reviewSummaries)
                 .serviceAddresses(serviceAddresses)
                 .build();
+    }
+
+    private void createReviewsFromBody(MovieAggregate body) {
+        if (body.getReviews() != null) {
+            body.getReviews().forEach(reviewSummary -> {
+                Review review = Review.builder()
+                        .reviewId(reviewSummary.getReviewId())
+                        .movieId(body.getMovieId())
+                        .subject(reviewSummary.getSubject())
+                        .content(reviewSummary.getContent())
+                        .author(reviewSummary.getAuthor())
+                        .serviceAddress(null)
+                        .build();
+
+                movieCompositeIntegration.createReview(review);
+            });
+        }
+    }
+
+    private void createRecommendationsFromBody(MovieAggregate body) {
+        if (body.getRecommendations() != null) {
+            body.getRecommendations().forEach(recommendationSummary -> {
+                Recommendation recommendation = Recommendation.builder()
+                        .recommendationId(recommendationSummary.getRecommendationId())
+                        .movieId(body.getMovieId())
+                        .author(recommendationSummary.getAuthor())
+                        .content(recommendationSummary.getContent())
+                        .rate(recommendationSummary.getRate())
+                        .serviceAddress(null)
+                        .build();
+
+                movieCompositeIntegration.createRecommendation(recommendation);
+            });
+        }
+    }
+
+    private void createMovieFromBody(MovieAggregate body) {
+        Movie movie = Movie.builder()
+                .movieId(body.getMovieId())
+                .genre(body.getGenre())
+                .title(body.getTitle())
+                .address(null)
+                .build();
+
+        movieCompositeIntegration.createMovie(movie);
     }
 }

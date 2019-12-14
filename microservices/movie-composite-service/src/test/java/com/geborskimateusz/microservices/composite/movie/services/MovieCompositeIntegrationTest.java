@@ -15,9 +15,12 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 class MovieCompositeIntegrationTest {
@@ -63,4 +66,20 @@ class MovieCompositeIntegrationTest {
         assertEquals(movie.getGenre(),returned.getGenre());
     }
 
+    @Test
+    void createMovie() {
+        int given = 1;
+
+        Movie movie = Movie.builder().movieId(given).address("Fake address").genre("Fake genre").title("Fake title").build();
+
+        when(restTemplate.postForObject(movieServiceUrl,movie, Movie.class)).thenReturn(movie);
+
+        Movie returned = movieCompositeIntegration.createMovie(movie);
+
+        assertNotNull(returned);
+        assertEquals(movie.getMovieId(),returned.getMovieId());
+        assertEquals(movie.getTitle(),returned.getTitle());
+        assertEquals(movie.getAddress(),returned.getAddress());
+        assertEquals(movie.getGenre(),returned.getGenre());
+    }
 }
