@@ -37,7 +37,7 @@ class MovieCompositeIntegrationTest {
     ObjectMapper mapper;
 
     String movieServiceUrl = "http://localhost:7001/movie/";
-    String recommendationServiceUrl = "http://localhost:7002/recommendation?movieId=";
+    String recommendationServiceUrl = "http://localhost:7002/recommendation";
     String reviewServiceUrl = "http://localhost:7003/review?movieId=";
 
     MovieCompositeIntegration movieCompositeIntegration;
@@ -105,7 +105,7 @@ class MovieCompositeIntegrationTest {
         ResponseEntity<List<Recommendation>> responseEntity = new ResponseEntity<List<Recommendation>>(expected, HttpStatus.ACCEPTED);
 
         when(restTemplate.exchange(
-                recommendationServiceUrl + movieId,
+                recommendationServiceUrl+ "?movieId=" + movieId,
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<List<Recommendation>>() {
@@ -113,20 +113,40 @@ class MovieCompositeIntegrationTest {
 
         List<Recommendation> actual = movieCompositeIntegration.getRecommendations(movieId);
 
-        assertEquals(1,actual.size());
+        assertEquals(1, actual.size());
 
         Recommendation recommendation = actual.get(0);
         assertEquals(recommendationId, (int) recommendation.getRecommendationId());
         assertEquals(movieId, (int) recommendation.getMovieId());
     }
 
+    @Test
+    void createRecommendation() {
+        int recommendationId = 1;
+        int movieId = 1;
+
+        Recommendation newRecommendation = getRecommendation(0, movieId);
+        Recommendation expected = getRecommendation(recommendationId, movieId);
+
+        when(restTemplate.postForObject(recommendationServiceUrl, newRecommendation, Recommendation.class)).thenReturn(expected);
+
+        Recommendation actual = movieCompositeIntegration.createRecommendation(newRecommendation);
+
+        assertNotNull(actual);
+        assertEquals(recommendationId, (int) actual.getRecommendationId());
+    }
+
     private List<Recommendation> getRecommendations(int recommendationId, int movieId) {
         return Collections.singletonList(
-                Recommendation.builder()
-                        .recommendationId(recommendationId)
-                        .movieId(movieId)
-                        .build()
+                getRecommendation(recommendationId, movieId)
         );
+    }
+
+    private Recommendation getRecommendation(int recommendationId, int movieId) {
+        return Recommendation.builder()
+                .recommendationId(recommendationId)
+                .movieId(movieId)
+                .build();
     }
 
 

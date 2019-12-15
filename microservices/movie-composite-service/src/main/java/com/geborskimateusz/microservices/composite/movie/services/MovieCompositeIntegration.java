@@ -58,8 +58,8 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
         this.mapper = mapper;
 
         movieServiceUrl = "http://" + movieServiceHost + ":" + movieServicePort + "/movie/";
-        recommendationServiceUrl = "http://" + recommendationServiceHost + ":" + recommendationServicePort + "/recommendation?movieId=";
-        reviewServiceUrl = "http://" + reviewServiceHost + ":" + reviewServicePort + "/review?movieId=";
+        recommendationServiceUrl = "http://" + recommendationServiceHost + ":" + recommendationServicePort + "/recommendation";
+        reviewServiceUrl = "http://" + reviewServiceHost + ":" + reviewServicePort + "/review";
     }
 
     @Override
@@ -115,7 +115,7 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
 
         try {
 
-            String url = recommendationServiceUrl + movieId;
+            String url = recommendationServiceUrl + "?movieId=" + movieId;
 
             log.debug("Will call getRecommendations API on URL: {}", url);
             List<Recommendation> recommendations = restTemplate.exchange(
@@ -161,7 +161,7 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
     @Override
     public List<Review> getReviews(int movieId) {
         try {
-            String url = reviewServiceUrl + movieId;
+            String url = reviewServiceUrl + "?movieId=" + movieId;
 
             log.debug("Will call getReviews API on URL: {}", url);
             List<Review> reviews = restTemplate.exchange(
