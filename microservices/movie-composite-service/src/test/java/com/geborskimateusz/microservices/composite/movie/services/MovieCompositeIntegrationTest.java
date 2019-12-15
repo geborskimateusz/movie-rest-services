@@ -136,6 +136,13 @@ class MovieCompositeIntegrationTest {
         assertEquals(recommendationId, (int) actual.getRecommendationId());
     }
 
+    @Test
+    void deleteRecommendations() {
+        int given = 1;
+        movieCompositeIntegration.deleteRecommendations(given);
+        verify(restTemplate, times(1)).delete(anyString());
+    }
+
     private List<Recommendation> getRecommendations(int recommendationId, int movieId) {
         return Collections.singletonList(
                 getRecommendation(recommendationId, movieId)
