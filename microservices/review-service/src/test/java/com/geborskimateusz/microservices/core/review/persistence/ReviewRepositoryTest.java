@@ -108,13 +108,19 @@ class ReviewRepositoryTest {
 
     }
 
-
-    //TODO, posted on StackOverflow
-    @Disabled
+    
     @Test
     void onDuplicate() {
 
-        ReviewEntity duplicated = savedReviewEntity;
+        ReviewEntity duplicated = ReviewEntity.builder()
+                .id(savedReviewEntity.getId())
+                .reviewId(savedReviewEntity.getReviewId())
+                .movieId(savedReviewEntity.getMovieId())
+                .author(savedReviewEntity.getAuthor())
+                .content(savedReviewEntity.getContent())
+                .subject(savedReviewEntity.getSubject())
+                .serviceAddress(savedReviewEntity.getServiceAddress())
+                .build();
 
         assertEquals(savedReviewEntity.getId(), duplicated.getId());
 
