@@ -1,7 +1,5 @@
 package com.geborskimateusz.microservices.core.review.persistence;
 
-
-
 import lombok.*;
 
 import javax.persistence.*;

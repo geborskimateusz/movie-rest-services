@@ -83,7 +83,7 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
         try {
 
             String url = movieServiceUrl;
-            log.debug("Will post Movie to {}", url );
+            log.debug("Will post Movie to {}", url);
 
             Movie posted = restTemplate.postForObject(url, movie, Movie.class);
             log.debug("Created movie with id: {}", posted.getMovieId());
@@ -91,7 +91,7 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
             return posted;
 
 
-        }catch (HttpClientErrorException ex) {
+        } catch (HttpClientErrorException ex) {
             throw handleHttpClientException(ex);
         }
     }
@@ -105,7 +105,7 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
 
             restTemplate.delete(url);
 
-        }catch (HttpClientErrorException ex) {
+        } catch (HttpClientErrorException ex) {
             throw handleHttpClientException(ex);
         }
     }
@@ -140,7 +140,7 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
         try {
 
             String url = recommendationServiceUrl;
-            log.debug("Will post Recommendation to {}", url );
+            log.debug("Will post Recommendation to {}", url);
 
             Recommendation posted = restTemplate.postForObject(url, recommendation, Recommendation.class);
             log.debug("Created movie with id: {}", posted.getRecommendationId());
@@ -148,7 +148,7 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
             return posted;
 
 
-        }catch (HttpClientErrorException ex) {
+        } catch (HttpClientErrorException ex) {
             throw handleHttpClientException(ex);
         }
     }
@@ -161,7 +161,7 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
 
             restTemplate.delete(url);
 
-        }catch (HttpClientErrorException ex) {
+        } catch (HttpClientErrorException ex) {
             throw handleHttpClientException(ex);
         }
     }
@@ -179,7 +179,7 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
                     new ParameterizedTypeReference<List<Review>>() {
                     }).getBody();
 
-            log.debug("Found {} reviews for a movei with id: {}", reviews.size(), movieId);
+            log.debug("Found {} reviews for a movie with id: {}", reviews.size(), movieId);
             return reviews;
 
         } catch (Exception ex) {
@@ -190,12 +190,32 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
 
     @Override
     public Review createReview(Review review) {
-        return null;
+        try {
+
+            String url = reviewServiceUrl;
+            log.debug("Will call createReview API on URL: {}", url);
+
+            Review posted = restTemplate.postForObject(url, review, Review.class);
+            log.debug("Created review with id: {}", posted.getReviewId());
+
+            return posted;
+
+        } catch (HttpClientErrorException ex) {
+            throw handleHttpClientException(ex);
+        }
     }
 
     @Override
     public void deleteReviews(int movieId) {
+        try {
+            String url = reviewServiceUrl + "?movieId=" + movieId;
+            log.debug("Trying to delete Reviews on url: {}", url);
 
+            restTemplate.delete(url);
+
+        } catch (HttpClientErrorException ex) {
+            throw handleHttpClientException(ex);
+        }
     }
 
     private String getErrorMessage(HttpClientErrorException ex) {
