@@ -4,6 +4,7 @@ import com.geborskimateusz.api.composite.movie.MovieAggregate;
 import com.geborskimateusz.api.core.movie.Movie;
 import com.geborskimateusz.api.core.recommendation.Recommendation;
 import com.geborskimateusz.api.core.review.Review;
+import com.geborskimateusz.microservices.composite.movie.services.utils.CompositeAggregator;
 import com.geborskimateusz.util.exceptions.NotFoundException;
 import com.geborskimateusz.util.http.ServiceUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,7 +19,8 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.when;
+import static org.mockito.BDDMockito.willThrow;
+import static org.mockito.Mockito.*;
 
 class BaseMovieCompositeServiceTest {
 
@@ -33,7 +35,7 @@ class BaseMovieCompositeServiceTest {
 
     @BeforeEach
     void setup() {
-        MockitoAnnotations.initMocks(this); //without this you will get NPE
+        MockitoAnnotations.initMocks(this);
     }
 
     @Test
@@ -72,8 +74,38 @@ class BaseMovieCompositeServiceTest {
         assertThrows(NotFoundException.class, () -> movieCompositeService.getCompositeMovie(given));
     }
 
-    private Movie getMovie(int given) {
-        return Movie.builder().movieId(given).address("Fake address").genre("Fake genre").title("Fake title").build();
+
+    @Test
+    void createCompositeMovie() {
+        int movieId = 1;
+        Movie movie = getMovie(movieId);
+        List<Recommendation> recommendations = getRecommendations(movie);
+        List<Review> reviews = getReviews(movie);
+
+        MovieAggregate given = CompositeAggregator.createMovieAggregate(movie, recommendations, reviews, null);
+
+        movieCompositeService.createCompositeMovie(given);
+
+        verify(movieCompositeIntegration, times(1)).createMovie(any(Movie.class));
+        verify(movieCompositeIntegration, times(recommendations.size())).createRecommendation(any(Recommendation.class));
+        verify(movieCompositeIntegration, times(reviews.size())).createReview(any(Review.class));
+    }
+
+    @Test
+    void createCompositeMovieThrowsRuntimeException() {
+        int movieId = 1;
+        Movie movie = getMovie(movieId);
+        List<Recommendation> recommendations = getRecommendations(movie);
+        List<Review> reviews = getReviews(movie);
+
+        MovieAggregate given = CompositeAggregator.createMovieAggregate(movie, recommendations, reviews, null);
+
+        willThrow(RuntimeException.class).given(movieCompositeIntegration).createMovie(any());
+        assertThrows(RuntimeException.class, () -> movieCompositeService.createCompositeMovie(given));
+    }
+
+    private Movie getMovie(int movieId) {
+        return Movie.builder().movieId(movieId).address("Fake address").genre("Fake genre").title("Fake title").build();
     }
 
     private List<Review> getReviews(Movie movie) {
