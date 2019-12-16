@@ -37,24 +37,16 @@ class BaseMovieCompositeServiceTest {
     }
 
     @Test
-    void getMovie() {
+    void getCompositeMovie() {
 
         int given = 1;
 
-        Movie movie = Movie.builder().movieId(given).address("Fake address").genre("Fake genre").title("Fake title").build();
+        Movie movie = getMovie(given);
 
         when(serviceUtil.getServiceAddress()).thenReturn("Fake service address");
 
-        List<Recommendation> recommendations = Arrays.asList(
-                Recommendation.builder().movieId(movie.getMovieId()).recommendationId(1).author("Author 1").rate(1).content("Content 1").serviceAddress(serviceUtil.getServiceAddress()).build(),
-                Recommendation.builder().movieId(movie.getMovieId()).recommendationId(2).author("Author 2").rate(2).content("Content 2").serviceAddress(serviceUtil.getServiceAddress()).build(),
-                Recommendation.builder().movieId(movie.getMovieId()).recommendationId(3).author("Author 3").rate(3).content("Content 3").serviceAddress(serviceUtil.getServiceAddress()).build()
-        );
-        List<Review> reviews = Arrays.asList(
-                Review.builder().movieId(movie.getMovieId()).reviewId(1).author("Author 1").subject("Subject 1").content("Content 1").serviceAddress(serviceUtil.getServiceAddress()).build(),
-                Review.builder().movieId(movie.getMovieId()).reviewId(2).author("Author 2").subject("Subject 2").content("Content 2").serviceAddress(serviceUtil.getServiceAddress()).build(),
-                Review.builder().movieId(movie.getMovieId()).reviewId(3).author("Author 2").subject("Subject 3").content("Content 3").serviceAddress(serviceUtil.getServiceAddress()).build()
-        );
+        List<Recommendation> recommendations = getRecommendations(movie);
+        List<Review> reviews = getReviews(movie);
 
         when(movieCompositeIntegration.getMovie(given)).thenReturn(movie);
         when(movieCompositeIntegration.getRecommendations(movie.getMovieId())).thenReturn(recommendations);
@@ -66,15 +58,37 @@ class BaseMovieCompositeServiceTest {
         assertAll(() -> {
             assertEquals(movie.getMovieId(), movieAggregate.getMovieId());
             assertEquals(movie.getTitle(), movieAggregate.getTitle());
+            assertFalse(movieAggregate.getRecommendations().isEmpty());
+            assertFalse(movieAggregate.getReviews().isEmpty());
         });
     }
 
     @Test
-    void getMovieShouldThrowNotFoundException() {
+    void getCompositeMovieShouldThrowNotFoundException() {
         int given = 1;
 
         when(movieCompositeIntegration.getMovie(anyInt())).thenThrow(NotFoundException.class);
 
         assertThrows(NotFoundException.class, () -> movieCompositeService.getCompositeMovie(given));
+    }
+
+    private Movie getMovie(int given) {
+        return Movie.builder().movieId(given).address("Fake address").genre("Fake genre").title("Fake title").build();
+    }
+
+    private List<Review> getReviews(Movie movie) {
+        return Arrays.asList(
+                Review.builder().movieId(movie.getMovieId()).reviewId(1).author("Author 1").subject("Subject 1").content("Content 1").serviceAddress(serviceUtil.getServiceAddress()).build(),
+                Review.builder().movieId(movie.getMovieId()).reviewId(2).author("Author 2").subject("Subject 2").content("Content 2").serviceAddress(serviceUtil.getServiceAddress()).build(),
+                Review.builder().movieId(movie.getMovieId()).reviewId(3).author("Author 2").subject("Subject 3").content("Content 3").serviceAddress(serviceUtil.getServiceAddress()).build()
+        );
+    }
+
+    private List<Recommendation> getRecommendations(Movie movie) {
+        return Arrays.asList(
+                Recommendation.builder().movieId(movie.getMovieId()).recommendationId(1).author("Author 1").rate(1).content("Content 1").serviceAddress(serviceUtil.getServiceAddress()).build(),
+                Recommendation.builder().movieId(movie.getMovieId()).recommendationId(2).author("Author 2").rate(2).content("Content 2").serviceAddress(serviceUtil.getServiceAddress()).build(),
+                Recommendation.builder().movieId(movie.getMovieId()).recommendationId(3).author("Author 3").rate(3).content("Content 3").serviceAddress(serviceUtil.getServiceAddress()).build()
+        );
     }
 }

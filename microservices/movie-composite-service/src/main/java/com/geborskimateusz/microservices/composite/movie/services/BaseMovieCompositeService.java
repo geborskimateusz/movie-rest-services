@@ -4,6 +4,7 @@ import com.geborskimateusz.api.composite.movie.*;
 import com.geborskimateusz.api.core.movie.Movie;
 import com.geborskimateusz.api.core.recommendation.Recommendation;
 import com.geborskimateusz.api.core.review.Review;
+import com.geborskimateusz.microservices.composite.movie.services.utils.CompositeAggregator;
 import com.geborskimateusz.util.exceptions.NotFoundException;
 import com.geborskimateusz.util.http.ServiceUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -35,7 +36,7 @@ public class BaseMovieCompositeService implements MovieCompositeService {
         List<Recommendation> recommendations = movieCompositeIntegration.getRecommendations(movieId);
         List<Review> reviews = movieCompositeIntegration.getReviews(movieId);
 
-        return createMovieAggregate(movie, recommendations, reviews, serviceUtil.getServiceAddress());
+        return CompositeAggregator.createMovieAggregate(movie, recommendations, reviews, serviceUtil.getServiceAddress());
 
     }
 
@@ -60,53 +61,6 @@ public class BaseMovieCompositeService implements MovieCompositeService {
 
     }
 
-    private MovieAggregate createMovieAggregate(Movie movie, List<Recommendation> recommendations, List<Review> reviews, String serviceAddress) {
-
-        // 1. Setup movie info
-        int movieId = movie.getMovieId();
-        String title = movie.getTitle();
-        String genre = movie.getGenre();
-
-        // 2. Copy summary recommendation info, if available
-        List<RecommendationSummary> recommendationSummaries =
-                (recommendations == null) ? null : recommendations.stream().map(
-                        r -> RecommendationSummary.builder()
-                                .recommendationId(r.getRecommendationId())
-                                .author(r.getAuthor())
-                                .rate(r.getRate())
-                                .build())
-                        .collect(Collectors.toList());
-
-        // 3. Copy summary review info, if available
-        List<ReviewSummary> reviewSummaries =
-                (reviews == null) ? null : reviews.stream().map(
-                        r -> ReviewSummary.builder()
-                                .reviewId(r.getReviewId())
-                                .author(r.getAuthor())
-                                .subject(r.getSubject())
-                                .build())
-                        .collect(Collectors.toList());
-
-
-        // 4. Create info regarding the involved microservices addresses
-        String reviewAddress = (reviews != null && reviews.size() > 0) ? reviews.get(0).getServiceAddress() : "";
-        String recommendationAddress = (recommendations != null && recommendations.size() > 0) ? recommendations.get(0).getServiceAddress() : "";
-        ServiceAddresses serviceAddresses = ServiceAddresses.builder()
-                .cmp(serviceAddress)
-                .mov(movie.getAddress())
-                .rev(reviewAddress)
-                .rec(recommendationAddress)
-                .build();
-
-        return MovieAggregate.builder()
-                .movieId(movieId)
-                .title(title)
-                .genre(genre)
-                .recommendations(recommendationSummaries)
-                .reviews(reviewSummaries)
-                .serviceAddresses(serviceAddresses)
-                .build();
-    }
 
     private void createReviewsFromBody(MovieAggregate body) {
         if (body.getReviews() != null) {
