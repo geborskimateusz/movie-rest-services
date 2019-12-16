@@ -50,7 +50,7 @@ public class BaseMovieCompositeService implements MovieCompositeService {
             createRecommendationsFromBody(body);
             createReviewsFromBody(body);
 
-        }catch (RuntimeException ex) {
+        } catch (RuntimeException ex) {
             log.warn("createCompositeMovie failed", ex);
             throw ex;
         }
@@ -58,6 +58,13 @@ public class BaseMovieCompositeService implements MovieCompositeService {
 
     @Override
     public void deleteCompositeMovie(int movieId) {
+        log.debug("deleteCompositeMovie will delete Movie, Reviews, Recommendations belonging to Movie with id: {}", movieId);
+
+        movieCompositeIntegration.deleteMovie(movieId);
+        movieCompositeIntegration.deleteReviews(movieId);
+        movieCompositeIntegration.deleteRecommendations(movieId);
+
+        log.debug("deleteCompositeMovie deleted Movie, Reviews, Recommendations belonging to Movie with id: {}", movieId);
 
     }
 

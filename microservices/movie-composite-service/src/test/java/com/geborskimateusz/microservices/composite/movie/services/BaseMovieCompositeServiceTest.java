@@ -104,6 +104,26 @@ class BaseMovieCompositeServiceTest {
         assertThrows(RuntimeException.class, () -> movieCompositeService.createCompositeMovie(given));
     }
 
+    @Test
+    void deleteCompositeMovie() {
+        int movieId = 1;
+        Movie movie = getMovie(movieId);
+        List<Recommendation> recommendations = getRecommendations(movie);
+        List<Review> reviews = getReviews(movie);
+
+        MovieAggregate given = CompositeAggregator.createMovieAggregate(movie, recommendations, reviews, null);
+        movieCompositeService.createCompositeMovie(given);
+
+
+        movieCompositeService.deleteCompositeMovie(movieId);
+
+        verify(movieCompositeIntegration, times(1)).deleteMovie(given.getMovieId());
+        verify(movieCompositeIntegration, times(1)).deleteReviews(given.getMovieId());
+        verify(movieCompositeIntegration, times(1)).deleteRecommendations(given.getMovieId());
+    }
+
+
+
     private Movie getMovie(int movieId) {
         return Movie.builder().movieId(movieId).address("Fake address").genre("Fake genre").title("Fake title").build();
     }
