@@ -49,9 +49,6 @@ public class MovieCompositeServiceApplicationTests {
     @MockBean
     MovieCompositeIntegration movieCompositeIntegration;
 
-    @InjectMocks
-    BaseMovieCompositeService baseMovieCompositeService;
-
     @MockBean
     ServiceUtil serviceUtil;
 
@@ -93,8 +90,8 @@ public class MovieCompositeServiceApplicationTests {
 
         getAndVerifyMovie(given, HttpStatus.OK)
                 .jsonPath("$.movieId").isEqualTo(given)
-                .jsonPath("$.recommendations.length()").isEqualTo(3)
-                .jsonPath("$.reviews.length()").isEqualTo(3);
+                .jsonPath("$.recommendations.length()").isEqualTo(recommendations.size())
+                .jsonPath("$.reviews.length()").isEqualTo(reviews.size());
     }
 
     @Test
@@ -136,8 +133,8 @@ public class MovieCompositeServiceApplicationTests {
         deleteAndVerify(given, HttpStatus.OK);
 
         verify(movieCompositeIntegration, times(1)).deleteMovie(given);
-        verify(movieCompositeIntegration, times(1)).deleteReviews(given);
-        verify(movieCompositeIntegration, times(1)).deleteRecommendations(given);
+        verify(movieCompositeIntegration, times(movieAggregate.getReviews().size())).deleteReviews(given);
+        verify(movieCompositeIntegration, times(movieAggregate.getRecommendations().size())).deleteRecommendations(given);
     }
 
     private WebTestClient.BodyContentSpec getAndVerifyMovie(int movieId, HttpStatus status) {
