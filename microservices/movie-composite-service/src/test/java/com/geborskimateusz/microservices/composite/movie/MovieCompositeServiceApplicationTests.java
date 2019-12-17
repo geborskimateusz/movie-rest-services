@@ -11,10 +11,13 @@ import com.geborskimateusz.microservices.composite.movie.services.MovieComposite
 import com.geborskimateusz.util.exceptions.InvalidInputException;
 import com.geborskimateusz.util.exceptions.NotFoundException;
 import com.geborskimateusz.util.http.ServiceUtil;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -39,17 +42,23 @@ public class MovieCompositeServiceApplicationTests {
     public static final String FAKE_ADDRESS = "Fake address";
     public static final String FAKE_GENRE = "Fake genre";
     public static final String FAKE_TITLE = "Fake title";
+
     @Autowired
     WebTestClient webTestClient;
 
     @MockBean
     MovieCompositeIntegration movieCompositeIntegration;
 
-    @MockBean
+    @InjectMocks
     BaseMovieCompositeService baseMovieCompositeService;
 
     @MockBean
     ServiceUtil serviceUtil;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.initMocks(this);
+    }
 
     @Test
     void createMovie() {
@@ -100,7 +109,7 @@ public class MovieCompositeServiceApplicationTests {
 
     @Test
     void getMovieByIdThrowsInvalidInputException() {
-		int given = 1;
+		int given = 0;
 
 		Mockito.when(movieCompositeIntegration.getMovie(given)).thenThrow(InvalidInputException.class);
 
@@ -108,20 +117,32 @@ public class MovieCompositeServiceApplicationTests {
 				.jsonPath("$.path").isEqualTo("/movie-composite/" + given);
     }
 
-    //TODO issue opened, need fix
-    @Disabled
     @Test
     void deleteCompositeMovie() {
-        int given = 1;
+        int movieId = 1;
+        MovieAggregate movieAggregate = MovieAggregate.builder()
+                .movieId(movieId)
+                .genre(FAKE_GENRE)
+                .title(FAKE_TITLE)
+                .recommendations(getRecommendationSummaries())
+                .reviews(getReviewSummaries())
+                .serviceAddresses(null)
+                .build();
+
+        postAndVerify(movieAggregate);
+
+        int given = movieId;
 
         deleteAndVerify(given, HttpStatus.OK);
 
-        verify(baseMovieCompositeService, times(1)).deleteCompositeMovie(given);
+        verify(movieCompositeIntegration, times(1)).deleteMovie(given);
+        verify(movieCompositeIntegration, times(1)).deleteReviews(given);
+        verify(movieCompositeIntegration, times(1)).deleteRecommendations(given);
     }
 
-    private WebTestClient.BodyContentSpec getAndVerifyMovie(int id, HttpStatus status) {
+    private WebTestClient.BodyContentSpec getAndVerifyMovie(int movieId, HttpStatus status) {
         return webTestClient.get()
-                .uri("/movie-composite/" + id)
+                .uri("/movie-composite/" + movieId)
                 .accept(MediaType.APPLICATION_JSON_UTF8)
                 .exchange()
                 .expectStatus().isEqualTo(status)
@@ -138,9 +159,9 @@ public class MovieCompositeServiceApplicationTests {
                 .expectBody();
     }
 
-    private void deleteAndVerify(int id, HttpStatus httpStatus) {
+    private void deleteAndVerify(int movieId, HttpStatus httpStatus) {
          webTestClient.delete()
-                .uri("/movie-composite/" + id)
+                .uri("/movie-composite/" + movieId)
                 .exchange()
                 .expectStatus().isEqualTo(httpStatus);
     }

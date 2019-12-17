@@ -1,6 +1,7 @@
 package com.geborskimateusz.microservices.composite.movie.services;
 
-import com.geborskimateusz.api.composite.movie.*;
+import com.geborskimateusz.api.composite.movie.MovieAggregate;
+import com.geborskimateusz.api.composite.movie.MovieCompositeService;
 import com.geborskimateusz.api.core.movie.Movie;
 import com.geborskimateusz.api.core.recommendation.Recommendation;
 import com.geborskimateusz.api.core.review.Review;
@@ -12,7 +13,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -28,7 +28,8 @@ public class BaseMovieCompositeService implements MovieCompositeService {
     }
 
     @Override
-    public MovieAggregate getCompositeMovie(int movieId) {
+    public MovieAggregate getCompositeMovie(Integer movieId) {
+        log.debug("getCompositeMovie: lookup a movie aggregate for movieId: {}", movieId);
         Movie movie = movieCompositeIntegration.getMovie(movieId);
 
         if (movie == null) throw new NotFoundException("No movie found for movieId: " + movieId);
