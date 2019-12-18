@@ -82,6 +82,7 @@ public class BaseMovieCompositeService implements MovieCompositeService {
                         .serviceAddress(null)
                         .build();
 
+                log.debug("createReviewsFromBody -> reviews size: {}, actual: {}", body.getReviews().size(),review);
                 movieCompositeIntegration.createReview(review);
             });
         }
@@ -99,6 +100,7 @@ public class BaseMovieCompositeService implements MovieCompositeService {
                         .serviceAddress(null)
                         .build();
 
+                log.debug("createRecommendationsFromBody -> recommendations size: {}, actual {}",body.getRecommendations().size(), recommendation);
                 movieCompositeIntegration.createRecommendation(recommendation);
             });
         }
@@ -112,6 +114,7 @@ public class BaseMovieCompositeService implements MovieCompositeService {
                 .address(null)
                 .build();
 
+        log.debug("createMovieFromBody, movieId: {}", movie.getMovieId());
         movieCompositeIntegration.createMovie(movie);
     }
 }
