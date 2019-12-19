@@ -122,59 +122,59 @@ function setupData() {
   }'
   recreateComposite 1 "$body"
 
-  #  body='{
-  #    "genre": "Science Fiction",
-  #    "movieId": 113,
-  #    "title": "Star Wars 1",
-  #    "reviews": [
-  #      {
-  #        "reviewId": 1,
-  #        "author": "Jane Doe",
-  #        "content": "Fake Review content of Jane Doe",
-  #        "subject": "Review of Jane Doe"
-  #      },
-  #      {
-  #        "reviewId": 1,
-  #        "author": "Jane Doe",
-  #        "content": "Fake Review content of Jane Doe",
-  #        "subject": "Review of Jane Doe"
-  #      },
-  #      {
-  #        "reviewId": 2,
-  #        "author": "Jane Doe",
-  #        "content": "Fake Review content of Jane Doe",
-  #        "subject": "Review of Jane Doe"
-  #      }
-  #    ]
-  #  }'
-  #  recreateComposite 113 "$body"
-  #
-  #  body='{
-  #    "genre": "Science Fiction",
-  #    "movieId": 213,
-  #    "title": "Star Wars 1",
-  #    "recommendations": [
-  #      {
-  #        "author": "John Doe",
-  #        "content": "Fake content of John Doe",
-  #        "rate": 5,
-  #        "recommendationId": 4
-  #      },
-  #      {
-  #        "author": "Jane Doe",
-  #        "content": "Fake content of Jane Doe",
-  #        "rate": 4,
-  #        "recommendationId": 5
-  #      },
-  #      {
-  #        "author": "Mike Fake",
-  #        "content": "Fake content of Mike Fake",
-  #        "rate": 2,
-  #        "recommendationId": 6
-  #      }
-  #    ]
-  #  }'
-  #  recreateComposite 213 "$body"
+    body='{
+      "genre": "Science Fiction",
+      "movieId": 113,
+      "title": "Star Wars 1",
+      "reviews": [
+        {
+          "reviewId": 2,
+          "author": "Jane Doe",
+          "content": "Fake Review content of Jane Doe",
+          "subject": "Review of Jane Doe"
+        },
+        {
+          "reviewId": 3,
+          "author": "Jane Doe",
+          "content": "Fake Review content of Jane Doe",
+          "subject": "Review of Jane Doe"
+        },
+        {
+          "reviewId": 4,
+          "author": "Jane Doe",
+          "content": "Fake Review content of Jane Doe",
+          "subject": "Review of Jane Doe"
+        }
+      ]
+    }'
+    recreateComposite 113 "$body"
+
+    body='{
+      "genre": "Science Fiction",
+      "movieId": 213,
+      "title": "Star Wars 1",
+      "recommendations": [
+        {
+          "author": "John Doe",
+          "content": "Fake content of John Doe",
+          "rate": 5,
+          "recommendationId": 4
+        },
+        {
+          "author": "Jane Doe",
+          "content": "Fake content of Jane Doe",
+          "rate": 4,
+          "recommendationId": 5
+        },
+        {
+          "author": "Mike Fake",
+          "content": "Fake content of Mike Fake",
+          "rate": 2,
+          "recommendationId": 6
+        }
+      ]
+    }'
+    recreateComposite 213 "$body"
 }
 
 set -e
@@ -189,11 +189,11 @@ if [[ $@ == *"start"* ]]; then
   echo "$ docker-compose down"
   docker-compose down
 
-#  echo "$ mvn clean install"
-#  mvn clean install
-#
-#  echo "$ docker-compose build"
-#  docker-compose build
+  echo "$ mvn clean install"
+  mvn clean install
+
+  echo "$ docker-compose build"
+  docker-compose build
 
   echo "$ docker-compose up -d"
   docker-compose up -d
@@ -208,29 +208,29 @@ assertCurl 200 "curl http://$HOST:$PORT/movie-composite/1 -s"
 assertEqual 1 $(echo $RESPONSE | jq .movieId)
 assertEqual 3 $(echo $RESPONSE | jq ".recommendations | length")
 assertEqual 1 $(echo $RESPONSE | jq ".reviews | length")
-#
-## Verify that a 404 (Not Found) error is returned for a non existing movieId (13)
-#assertCurl 404 "curl http://$HOST:$PORT/movie-composite/13 -s"
-#
-## Verify that no recommendations are returned for movieId 113
-#assertCurl 200 "curl http://$HOST:$PORT/movie-composite/113 -s"
-#assertEqual 113 $(echo $RESPONSE | jq .movieId)
-#assertEqual 0 $(echo $RESPONSE | jq ".recommendations | length")
-#assertEqual 3 $(echo $RESPONSE | jq ".reviews | length")
-#
-## Verify that no reviews are returned for movieId 213
-#assertCurl 200 "curl http://$HOST:$PORT/movie-composite/213 -s"
-#assertEqual 213 $(echo $RESPONSE | jq .movieId)
-#assertEqual 3 $(echo $RESPONSE | jq ".recommendations | length")
-#assertEqual 0 $(echo $RESPONSE | jq ".reviews | length")
-#
-## Verify that a 422 (Unprocessable Entity) error is returned for a movieId that is out of range (-1)
-#assertCurl 422 "curl http://$HOST:$PORT/movie-composite/-1 -s"
-#assertEqual "\"Invalid movieId: -1\"" "$(echo $RESPONSE | jq .message)"
-#
-## Verify that a 400 (Bad Request) error error is returned for a movieId that is not a number, i.e. invalid format
-#assertCurl 400 "curl http://$HOST:$PORT/movie-composite/invalidProductId -s"
-#assertEqual "\"Type mismatch.\"" "$(echo $RESPONSE | jq .message)"
+
+# Verify that a 404 (Not Found) error is returned for a non existing movieId (13)
+assertCurl 404 "curl http://$HOST:$PORT/movie-composite/13 -s"
+
+# Verify that no recommendations are returned for movieId 113
+assertCurl 200 "curl http://$HOST:$PORT/movie-composite/113 -s"
+assertEqual 113 $(echo $RESPONSE | jq .movieId)
+assertEqual 0 $(echo $RESPONSE | jq ".recommendations | length")
+assertEqual 3 $(echo $RESPONSE | jq ".reviews | length")
+
+# Verify that no reviews are returned for movieId 213
+assertCurl 200 "curl http://$HOST:$PORT/movie-composite/213 -s"
+assertEqual 213 $(echo $RESPONSE | jq .movieId)
+assertEqual 3 $(echo $RESPONSE | jq ".recommendations | length")
+assertEqual 0 $(echo $RESPONSE | jq ".reviews | length")
+
+# Verify that a 422 (Unprocessable Entity) error is returned for a movieId that is out of range (-1)
+assertCurl 422 "curl http://$HOST:$PORT/movie-composite/-1 -s"
+assertEqual "\"Invalid movieId: -1\"" "$(echo $RESPONSE | jq .message)"
+
+# Verify that a 400 (Bad Request) error error is returned for a movieId that is not a number, i.e. invalid format
+assertCurl 400 "curl http://$HOST:$PORT/movie-composite/invalidProductId -s"
+assertEqual "\"Type mismatch.\"" "$(echo $RESPONSE | jq .message)"
 
 if [[ $@ == *"stop"* ]]; then
   echo "We are done, stopping the test environment..."
