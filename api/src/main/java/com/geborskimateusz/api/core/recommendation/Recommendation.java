@@ -1,14 +1,12 @@
 package com.geborskimateusz.api.core.recommendation;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
 @Builder
 @AllArgsConstructor
+@ToString
 public class Recommendation {
     private final Integer movieId;
     private final Integer recommendationId;

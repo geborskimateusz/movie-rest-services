@@ -25,6 +25,7 @@ public class CompositeAggregator {
                 (recommendations == null) ? null : recommendations.stream().map(
                         r -> RecommendationSummary.builder()
                                 .recommendationId(r.getRecommendationId())
+                                .content(r.getContent())
                                 .author(r.getAuthor())
                                 .rate(r.getRate())
                                 .build())
@@ -37,6 +38,7 @@ public class CompositeAggregator {
                                 .reviewId(r.getReviewId())
                                 .author(r.getAuthor())
                                 .subject(r.getSubject())
+                                .content(r.getContent())
                                 .build())
                         .collect(Collectors.toList());
 
