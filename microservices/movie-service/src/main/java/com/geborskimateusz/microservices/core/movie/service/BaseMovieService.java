@@ -21,19 +21,17 @@ public class BaseMovieService implements MovieService {
 
     private final MovieMapper movieMapper = MovieMapper.INSTANCE;
 
-    @Autowired
     public BaseMovieService(ServiceUtil serviceUtil, MovieRepository movieRepository) {
         this.serviceUtil = serviceUtil;
         this.movieRepository = movieRepository;
     }
-
 
     @Override
     public Movie getMovie(Integer movieId) {
 
         if (movieId < 1) throw new InvalidInputException("Invalid movieId: " + movieId);
 
-        MovieEntity movieEntity = movieRepository.findByMovieId(movieId)
+        MovieEntity movieEntity = movieRepository.findByMovieId(movieId).blockOptional()
                 .orElseThrow(() -> new NotFoundException("No movie found for movieId: " + movieId));
 
         Movie movie = movieMapper.entityToApi(movieEntity);
@@ -50,7 +48,7 @@ public class BaseMovieService implements MovieService {
         try {
 
             MovieEntity movieEntity = movieMapper.apiToEntity(movie);
-            MovieEntity saved =  movieRepository.save(movieEntity);
+            MovieEntity saved =  movieRepository.save(movieEntity).block();
 
             log.debug("createMovie: entity created for movieId: {}", movie.getMovieId());
             return movieMapper.entityToApi(saved);
@@ -63,6 +61,6 @@ public class BaseMovieService implements MovieService {
     @Override
     public void deleteMovie(Integer movieId) {
         if (movieId < 1) throw new InvalidInputException("Invalid movieId: " + movieId);
-        movieRepository.findByMovieId(movieId).ifPresent(movieRepository::delete);
+        movieRepository.findByMovieId(movieId).blockOptional().ifPresent(movieRepository::delete);
     }
 }

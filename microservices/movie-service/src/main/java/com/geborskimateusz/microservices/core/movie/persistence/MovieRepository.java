@@ -1,10 +1,8 @@
 package com.geborskimateusz.microservices.core.movie.persistence;
 
-import com.geborskimateusz.api.core.movie.Movie;
-import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import reactor.core.publisher.Mono;
 
-import java.util.Optional;
-
-public interface MovieRepository extends PagingAndSortingRepository<MovieEntity, String> {
-    Optional<MovieEntity> findByMovieId(Integer movieId);
+public interface MovieRepository extends ReactiveCrudRepository<MovieEntity, String> {
+    Mono<MovieEntity> findByMovieId(Integer movieId);
 }

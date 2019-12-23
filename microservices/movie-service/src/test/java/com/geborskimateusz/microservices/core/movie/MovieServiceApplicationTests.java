@@ -40,7 +40,7 @@ public class MovieServiceApplicationTests {
 
         postAndVerify(given, HttpStatus.OK);
 
-        assertTrue(movieRepository.findByMovieId(given).isPresent());
+        assertTrue(movieRepository.findByMovieId(given).blockOptional().isPresent());
 
         getAndVerify(given, HttpStatus.OK)
                 .jsonPath("$.movieId").isEqualTo(given)
@@ -57,7 +57,7 @@ public class MovieServiceApplicationTests {
 
         postAndVerify(given, HttpStatus.OK);
 
-        assertFalse(movieRepository.findByMovieId(requested).isPresent());
+        assertFalse(movieRepository.findByMovieId(requested).blockOptional().isPresent());
 
         getAndVerify(requested, HttpStatus.NOT_FOUND)
                 .jsonPath("$.message").isEqualTo("No movie found for movieId: " + requested);
@@ -89,7 +89,7 @@ public class MovieServiceApplicationTests {
 
         postAndVerify(given, HttpStatus.OK);
 
-        assertTrue(movieRepository.findByMovieId(given).isPresent());
+        assertTrue(movieRepository.findByMovieId(given).blockOptional().isPresent());
 
         deleteAndVerify(given, HttpStatus.OK);
     }
