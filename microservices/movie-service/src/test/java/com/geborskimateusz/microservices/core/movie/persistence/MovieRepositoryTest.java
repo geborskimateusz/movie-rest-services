@@ -1,5 +1,6 @@
 package com.geborskimateusz.microservices.core.movie.persistence;
 
+import com.sun.org.apache.xpath.internal.patterns.StepPattern;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -86,13 +87,10 @@ public class MovieRepositoryTest {
 
     @Test
     void findById() {
-        Optional<MovieEntity> optionalMovieEntity = movieRepository.findById(savedMovieEntity.getId()).blockOptional();
 
-        assertTrue(optionalMovieEntity.isPresent());
-
-        MovieEntity movieEntity = optionalMovieEntity.get();
-
-        assertEqualsMovie(savedMovieEntity, movieEntity);
+        StepVerifier.create(movieRepository.findByMovieId(savedMovieEntity.getMovieId()))
+                .expectNextMatches(movieEntity -> areMovieEqual(savedMovieEntity, movieEntity))
+                .verifyComplete();
     }
 
     @Test
@@ -103,30 +101,26 @@ public class MovieRepositoryTest {
         MovieEntity m1 = movieRepository.findById(savedMovieEntity.getId()).block();
         MovieEntity m2 = movieRepository.findById(savedMovieEntity.getId()).block();
 
-        m1.setTitle(concurrentM1actionData);
-
         // by updating Entity its version should be updated
-        movieRepository.save(m1);
+        m1.setTitle(concurrentM1actionData);
+        movieRepository.save(m1).block();
 
         // should fail because of version mismatch
-        try {
-            m2.setTitle(concurrentM2actionData);
-            movieRepository.save(m2);
-            fail("Expected an OptimisticLockingFailureException");
-        } catch (OptimisticLockingFailureException e) {
-            System.out.println("shouldPerformOptimisticLocking() -> catch OptimisticLockingFailureException");
-        }
+        m2.setTitle(concurrentM2actionData);
+        StepVerifier.create(movieRepository.save(m2)).expectError(OptimisticLockingFailureException.class).verify();
 
         //check current version and state
-        MovieEntity updatedMovieEntity = movieRepository.findById(savedMovieEntity.getId()).block();
-        assertEquals(1, (int) updatedMovieEntity.getVersion());
-        assertEquals(concurrentM1actionData, updatedMovieEntity.getTitle());
+        StepVerifier.create(movieRepository.findByMovieId(savedMovieEntity.getMovieId()))
+                .expectNextMatches(movieEntity ->
+                        movieEntity.getVersion() == 1 && concurrentM1actionData.equals(movieEntity.getTitle()))
+                .verifyComplete();
     }
 
     @Test
     void delete() {
-        movieRepository.delete(savedMovieEntity);
-        assertEquals(0, movieRepository.count());
+        StepVerifier.create(movieRepository.delete(savedMovieEntity)).verifyComplete();
+        StepVerifier.create(movieRepository.existsById(savedMovieEntity.getId())).expectNext(false).verifyComplete();
+        StepVerifier.create(movieRepository.count()).expectNext(0L).verifyComplete();
     }
 
     @Test
@@ -136,42 +130,6 @@ public class MovieRepositoryTest {
 
         assertThrows(DuplicateKeyException.class, () -> movieRepository.save(duplicate));
     }
-
-//    @Test
-//    void paging() {
-//
-//        bulkSaveMovie();
-//
-//        Pageable nextPage = PageRequest.of(0, 4, Sort.Direction.ASC, "movieId");
-//
-//        nextPage = verifyPages(nextPage, "[1, 2, 3, 4]", true);
-//        nextPage = verifyPages(nextPage, "[5, 6, 7, 8]", true);
-//        verifyPages(nextPage, "[9, 10]", false);
-//
-//    }
-//
-//    private Pageable verifyPages(Pageable nextPage, String idsAsString, boolean hasNext) {
-//        Page<MovieEntity> moviePage = movieRepository.findAll(nextPage);
-//        assertEquals(hasNext, moviePage.hasNext());
-//
-//        String ids = moviePage.get().map(MovieEntity::getMovieId).collect(Collectors.toList()).toString();
-//        assertEquals(idsAsString, ids);
-//        return nextPage.next();
-//    }
-
-    private void bulkSaveMovie() {
-        movieRepository.deleteAll();
-
-        List<MovieEntity> movies = IntStream.rangeClosed(1, 10)
-                .mapToObj(i -> MovieEntity.builder()
-                        .movieId(i)
-                        .title("Movie nr: " + i)
-                        .build())
-                .collect(Collectors.toList());
-
-        movieRepository.saveAll(movies);
-    }
-
 
     private void assertEqualsMovie(MovieEntity expected, MovieEntity actual) {
         assertAll("Executing assertEqualsMovie(..)", () -> {
