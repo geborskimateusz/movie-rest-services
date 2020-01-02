@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import reactor.core.publisher.Mono;
 
 
 @Api(description = "Rest API for composite movie information.")
@@ -32,7 +33,7 @@ public interface MovieCompositeService {
     @GetMapping(
             value = "/movie-composite/{movieId}",
             produces = "application/json")
-    MovieAggregate getCompositeMovie(@PathVariable Integer movieId);
+    Mono<MovieAggregate> getCompositeMovie(@PathVariable Integer movieId);
 
 
     /**
