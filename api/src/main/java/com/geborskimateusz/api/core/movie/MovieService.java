@@ -2,6 +2,7 @@ package com.geborskimateusz.api.core.movie;
 
 import io.swagger.models.auth.In;
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Mono;
 
 public interface MovieService {
 
@@ -14,7 +15,7 @@ public interface MovieService {
     @GetMapping(
             value = "/movie/{movieId}",
             produces = "application/json")
-    Movie getMovie(@PathVariable Integer movieId);
+    Mono<Movie> getMovie(@PathVariable Integer movieId);
 
     /**
      * Sample usage:

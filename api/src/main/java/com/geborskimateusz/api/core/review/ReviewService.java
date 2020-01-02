@@ -1,6 +1,7 @@
 package com.geborskimateusz.api.core.review;
 
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 
@@ -15,7 +16,7 @@ public interface ReviewService {
     @GetMapping(
         value    = "/review",
         produces = "application/json")
-    List<Review> getReviews(@RequestParam(value = "movieId", required = true) int movieId);
+    Flux<Review> getReviews(@RequestParam(value = "movieId", required = true) int movieId);
 
     /**
      * Sample usage:
