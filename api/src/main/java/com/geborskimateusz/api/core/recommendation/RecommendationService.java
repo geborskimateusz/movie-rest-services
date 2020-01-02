@@ -1,6 +1,7 @@
 package com.geborskimateusz.api.core.recommendation;
 
 import org.springframework.web.bind.annotation.*;
+import reactor.core.publisher.Flux;
 
 import java.util.List;
 
@@ -15,7 +16,7 @@ public interface RecommendationService {
     @GetMapping(
             value    = "/recommendation",
             produces = "application/json")
-    List<Recommendation> getRecommendations(@RequestParam(value = "movieId", required = true) int movieId);
+    Flux<Recommendation> getRecommendations(@RequestParam(value = "movieId", required = true) int movieId);
 
     /**
      * Sample usage:

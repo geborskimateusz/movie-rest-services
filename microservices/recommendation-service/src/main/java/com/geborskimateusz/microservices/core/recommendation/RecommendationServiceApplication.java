@@ -5,10 +5,12 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
+import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
 
 @Slf4j
 @SpringBootApplication
-@ComponentScan({"com.geborskimateusz"})
+@ComponentScan(basePackages = {"com.geborskimateusz"})
 public class RecommendationServiceApplication {
 
 	public static void main(String[] args) {

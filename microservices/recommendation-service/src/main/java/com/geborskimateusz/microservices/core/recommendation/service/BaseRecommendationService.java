@@ -7,41 +7,33 @@ import com.geborskimateusz.microservices.core.recommendation.persistence.Recomme
 import com.geborskimateusz.util.exceptions.InvalidInputException;
 import com.geborskimateusz.util.http.ServiceUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import reactor.core.publisher.Flux;
 
 @Slf4j
 @RestController
 public class BaseRecommendationService implements RecommendationService {
 
     private final ServiceUtil serviceUtil;
-    private final RecommendationRepository recommendationRepository;
+    private  RecommendationRepository recommendationRepository;
 
     private final RecommendationMapper mapper = RecommendationMapper.INSTANCE;
 
-    @Autowired
     public BaseRecommendationService(ServiceUtil serviceUtil, RecommendationRepository recommendationRepository) {
         this.serviceUtil = serviceUtil;
         this.recommendationRepository = recommendationRepository;
     }
 
     @Override
-    public List<Recommendation> getRecommendations(int movieId) {
+    public Flux<Recommendation> getRecommendations(int movieId) {
 
         if (movieId < 1) throw new InvalidInputException("Invalid movieId: " + movieId);
 
-        List<RecommendationEntity> recommendationEntities = recommendationRepository.findByMovieId(movieId);
-        List<Recommendation> recommendations = mapper.entityListToApiList(recommendationEntities);
-        recommendations.forEach(recommendation -> recommendation.setServiceAddress(serviceUtil.getServiceAddress()));
-
-        log.debug("Recommendation response size: {}", recommendations.size());
-
-        return recommendations;
+        return recommendationRepository.findByMovieId(movieId)
+                .log()
+                .map(mapper::entityToApi)
+                .map(e -> {e.setServiceAddress(serviceUtil.getServiceAddress()); return e;});
     }
 
     @Override
@@ -50,7 +42,7 @@ public class BaseRecommendationService implements RecommendationService {
 
         try {
             RecommendationEntity recommendationEntity = mapper.apiToEntity(recommendation);
-            RecommendationEntity saved = recommendationRepository.save(recommendationEntity);
+            RecommendationEntity saved = recommendationRepository.save(recommendationEntity).block();
 
             log.debug("createRecommendation: created a recommendation entity: {}/{}", recommendation.getMovieId(), recommendation.getRecommendationId());
 

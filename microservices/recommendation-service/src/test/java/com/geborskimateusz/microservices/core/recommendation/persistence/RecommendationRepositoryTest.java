@@ -1,5 +1,6 @@
 package com.geborskimateusz.microservices.core.recommendation.persistence;
 
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -7,13 +8,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.data.mongodb.repository.config.EnableMongoRepositories;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
+import reactor.test.StepVerifier;
 
 import java.util.List;
 
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(SpringExtension.class)
 @DataMongoTest
@@ -23,43 +28,50 @@ public class RecommendationRepositoryTest {
     public static final int BASE_MOVIE_ID = 2;
 
     @Autowired
-    private RecommendationRepository recommendationRepository;
+    RecommendationRepository recommendationRepository;
 
     RecommendationEntity savedRecommendationEntity;
 
 
     @BeforeEach
     void setUp() {
-        recommendationRepository.deleteAll();
+        recommendationRepository.deleteAll().block();
 
-        RecommendationEntity recommendationEntity = RecommendationEntity.builder()
+        RecommendationEntity given = RecommendationEntity.builder()
                 .recommendationId(BASE_RECOMMENDATION_ID)
                 .movieId(BASE_MOVIE_ID)
                 .content("Fake recommendation")
                 .build();
 
-        savedRecommendationEntity = recommendationRepository.save(recommendationEntity);
-        assertRecommendation(recommendationEntity, savedRecommendationEntity);
+        StepVerifier.create(recommendationRepository.save(given))
+                .expectNextMatches(recommendationEntity -> {
+                    savedRecommendationEntity = recommendationEntity;
+                    return assertRecommendation(given, recommendationEntity);
+                })
+                .verifyComplete();
     }
 
     @Test
     void create() {
-        recommendationRepository.deleteAll();
+        recommendationRepository.deleteAll().block();
 
-        RecommendationEntity recommendationEntity = RecommendationEntity.builder()
+        RecommendationEntity given = RecommendationEntity.builder()
                 .recommendationId(BASE_RECOMMENDATION_ID)
                 .movieId(BASE_MOVIE_ID)
                 .content("Fake recommendation")
                 .build();
 
-        RecommendationEntity saved = recommendationRepository.save(recommendationEntity);
-        assertRecommendation(recommendationEntity, saved);
+        StepVerifier.create(recommendationRepository.save(given))
+                .expectNextMatches(recommendationEntity -> assertRecommendation(given, recommendationEntity))
+                .verifyComplete();
+
     }
 
     @Test
     void findByMovieId() {
         List<RecommendationEntity> recommendationEntities =
-                recommendationRepository.findByMovieId(savedRecommendationEntity.getMovieId());
+                recommendationRepository.findByMovieId(savedRecommendationEntity.getMovieId())
+                        .collectList().block();
 
         assertThat(recommendationEntities, hasSize(1));
         assertRecommendation(savedRecommendationEntity, recommendationEntities.get(0));
@@ -70,15 +82,18 @@ public class RecommendationRepositoryTest {
         String newContent = "Updated Content";
         savedRecommendationEntity.setContent(newContent);
 
-        RecommendationEntity updated = recommendationRepository.save(savedRecommendationEntity);
-        assertEquals(savedRecommendationEntity.getId(), updated.getId());
-        assertEquals(newContent, updated.getContent());
+        StepVerifier.create(recommendationRepository.save(savedRecommendationEntity))
+                .expectNextMatches(recommendationEntity ->
+                        recommendationEntity.getId().equals(savedRecommendationEntity.getId()) &&
+                                recommendationEntity.getContent().equals(newContent))
+                .verifyComplete();
     }
 
     @Test
     void delete() {
-        recommendationRepository.delete(savedRecommendationEntity);
-        assertEquals(0, recommendationRepository.count());
+        recommendationRepository.delete(savedRecommendationEntity).block();
+        assertThat(recommendationRepository.count().block(), equalTo(0L));
+
     }
 
     @Test
@@ -87,11 +102,7 @@ public class RecommendationRepositoryTest {
         RecommendationEntity duplicate = RecommendationEntity.builder().build();
         duplicate.setId(savedRecommendationEntity.getId());
 
-        assertThrows(DuplicateKeyException.class, () -> {
-            recommendationRepository.save(duplicate);
-        });
-
-
+        StepVerifier.create(recommendationRepository.save(duplicate)).expectError(DuplicateKeyException.class).verify();
     }
 
     @Test
@@ -99,35 +110,28 @@ public class RecommendationRepositoryTest {
         String r1ConcurrentContent = "r1ConcurrentContent";
         String r2ConcurrentContent = "r2ConcurrentContent";
 
-        RecommendationEntity r1 = recommendationRepository.findById(savedRecommendationEntity.getId()).get();
-        RecommendationEntity r2 = recommendationRepository.findById(savedRecommendationEntity.getId()).get();
+        RecommendationEntity r1 = recommendationRepository.findById(savedRecommendationEntity.getId()).block();
+        RecommendationEntity r2 = recommendationRepository.findById(savedRecommendationEntity.getId()).block();
 
         r1.setContent(r1ConcurrentContent);
-        recommendationRepository.save(r1);
+        recommendationRepository.save(r1).block();
 
-        try {
-            r2.setContent(r2ConcurrentContent);
-            recommendationRepository.save(r2);
+        r2.setContent(r2ConcurrentContent);
+        StepVerifier.create(recommendationRepository.save(r2)).expectError(OptimisticLockingFailureException.class).verify();
 
-            fail("Expected an OptimisticLockingFailureException");
-        }catch (OptimisticLockingFailureException e) {
-            System.out.println("OptimisticLockingFailureException should be throw.");
-        }
-
-        RecommendationEntity updated = recommendationRepository.findById(savedRecommendationEntity.getId()).get();
-        assertEquals(1, (int) updated.getVersion());
-        assertEquals(r1ConcurrentContent, updated.getContent());
+        StepVerifier.create(recommendationRepository.findById(savedRecommendationEntity.getId()))
+                .expectNextMatches(updated ->
+                        updated.getVersion() == 1 &&
+                                r1ConcurrentContent.equals(updated.getContent()));
     }
 
-    private void assertRecommendation(RecommendationEntity expected, RecommendationEntity actual) {
-        assertAll("Executing assertRecommendation(..)", () -> {
-            assertEquals(expected.getId(),actual.getId());
-            assertEquals(expected.getVersion(),actual.getVersion());
-            assertEquals(expected.getRecommendationId(),actual.getRecommendationId());
-            assertEquals(expected.getMovieId(),actual.getMovieId());
-            assertEquals(expected.getServiceAddress(),actual.getServiceAddress());
-            assertEquals(expected.getAuthor(),actual.getAuthor());
-            assertEquals(expected.getContent(),actual.getContent());
-        });
+    private boolean assertRecommendation(RecommendationEntity expected, RecommendationEntity actual) {
+        return expected.getId() == actual.getId() &&
+                expected.getVersion() == actual.getVersion() &&
+                expected.getRecommendationId() == actual.getRecommendationId() &&
+                expected.getMovieId() == actual.getMovieId() &&
+                expected.getServiceAddress() == actual.getServiceAddress() &&
+                expected.getAuthor() == actual.getAuthor() &&
+                expected.getContent() == actual.getContent();
     }
 }
