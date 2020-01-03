@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,7 +33,7 @@ public class BaseReviewService implements ReviewService {
     }
 
     @Override
-    public List<Review> getReviews(int movieId) {
+    public Mono<Review> getReviews(int movieId) {
         if (movieId < 1) throw new InvalidInputException("Invalid productId: " + movieId);
 
         List<ReviewEntity> reviewEntities = reviewRepository.findByMovieId(movieId);

@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 
 @Slf4j
 @RestController
@@ -27,40 +28,39 @@ public class BaseMovieService implements MovieService {
     }
 
     @Override
-    public Movie getMovie(Integer movieId) {
+    public Mono<Movie> getMovie(Integer movieId) {
 
         if (movieId < 1) throw new InvalidInputException("Invalid movieId: " + movieId);
 
-        MovieEntity movieEntity = movieRepository.findByMovieId(movieId).blockOptional()
-                .orElseThrow(() -> new NotFoundException("No movie found for movieId: " + movieId));
-
-        Movie movie = movieMapper.entityToApi(movieEntity);
-        movie.setAddress(serviceUtil.getServiceAddress());
-
-        log.debug("movie return the found movie for movieId={}", movieId);
-
-        return movie;
+        return movieRepository.findByMovieId(movieId)
+                .switchIfEmpty(Mono.error(new NotFoundException("No movie found for movieId: " + movieId)))
+                .log()
+                .map(movieMapper::entityToApi)
+                .map(movie -> {
+                    movie.setAddress(serviceUtil.getServiceAddress());
+                    log.debug("movie return the found movie for movieId={}", movieId);
+                    return movie;
+                });
     }
 
     @Override
     public Movie createMovie(Movie movie) {
+        MovieEntity movieEntity = movieMapper.apiToEntity(movie);
 
-        try {
-
-            MovieEntity movieEntity = movieMapper.apiToEntity(movie);
-            MovieEntity saved =  movieRepository.save(movieEntity).block();
-
-            log.debug("createMovie: entity created for movieId: {}", movie.getMovieId());
-            return movieMapper.entityToApi(saved);
-        }catch (DuplicateKeyException e) {
-            throw new InvalidInputException("Duplicate key for movieId: " +movie.getMovieId());
-        }
-
+        return movieRepository.save(movieEntity)
+                .onErrorMap(DuplicateKeyException.class, ex -> new InvalidInputException("Duplicate key for movieId: " + movie.getMovieId()))
+                .log()
+                .map(movieMapper::entityToApi).block();
     }
 
     @Override
     public void deleteMovie(Integer movieId) {
         if (movieId < 1) throw new InvalidInputException("Invalid movieId: " + movieId);
-        movieRepository.findByMovieId(movieId).blockOptional().ifPresent(movieRepository::delete);
+
+        movieRepository.findByMovieId(movieId)
+                .log()
+                .map(movieRepository::delete)
+                .flatMap(e -> e)
+                .block();
     }
 }
