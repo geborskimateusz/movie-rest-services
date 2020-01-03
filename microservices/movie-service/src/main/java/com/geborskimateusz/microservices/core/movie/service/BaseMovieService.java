@@ -50,7 +50,8 @@ public class BaseMovieService implements MovieService {
         return movieRepository.save(movieEntity)
                 .onErrorMap(DuplicateKeyException.class, ex -> new InvalidInputException("Duplicate key for movieId: " + movie.getMovieId()))
                 .log()
-                .map(movieMapper::entityToApi).block();
+                .map(movieMapper::entityToApi)
+                .block();
     }
 
     @Override

@@ -9,6 +9,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
@@ -25,6 +26,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = RANDOM_PORT, properties = {"spring.data.mongodb.port: 0"})
+@AutoConfigureWebTestClient(timeout = "10000")
 public class MovieServiceApplicationTests {
 
     @Autowired
@@ -39,7 +41,6 @@ public class MovieServiceApplicationTests {
         Integer given = 1;
 
         postAndVerify(given, HttpStatus.OK);
-
 
         getAndVerify(given, HttpStatus.OK)
                 .jsonPath("$.movieId").isEqualTo(given)
@@ -81,7 +82,6 @@ public class MovieServiceApplicationTests {
         getAndVerify(given, HttpStatus.BAD_REQUEST);
     }
 
-    //TODO
     @Test
     public void deleteMovie() {
         Integer given = 1;
@@ -137,7 +137,7 @@ public class MovieServiceApplicationTests {
 
     @AfterEach
     void tearDown() {
-        movieRepository.deleteAll();
+        movieRepository.deleteAll().block();
     }
 
 }

@@ -118,7 +118,7 @@ public class MovieRepositoryTest {
         MovieEntity duplicate = MovieEntity.builder().build();
         duplicate.setId(savedMovieEntity.getId());
 
-        assertThrows(DuplicateKeyException.class, () -> movieRepository.save(duplicate));
+        StepVerifier.create(movieRepository.save(duplicate)).expectError(DuplicateKeyException.class);
     }
 
     private void assertEqualsMovie(MovieEntity expected, MovieEntity actual) {
