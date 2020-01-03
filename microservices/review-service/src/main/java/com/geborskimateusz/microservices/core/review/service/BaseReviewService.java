@@ -9,13 +9,12 @@ import com.geborskimateusz.util.http.ServiceUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 @Slf4j
@@ -25,24 +24,22 @@ public class BaseReviewService implements ReviewService {
     private final ServiceUtil serviceUtil;
     private final ReviewRepository reviewRepository;
     private final ReviewMapper mapper = ReviewMapper.INSTANCE;
+    private final Scheduler scheduler;
 
     @Autowired
-    public BaseReviewService(ServiceUtil seriviceUtil, ReviewRepository reviewRepository) {
+    public BaseReviewService(ServiceUtil seriviceUtil, ReviewRepository reviewRepository, Scheduler scheduler) {
         this.serviceUtil = seriviceUtil;
         this.reviewRepository = reviewRepository;
+        this.scheduler = scheduler;
     }
 
     @Override
-    public Mono<Review> getReviews(int movieId) {
+    public Flux<Review> getReviews(int movieId) {
         if (movieId < 1) throw new InvalidInputException("Invalid productId: " + movieId);
 
-        List<ReviewEntity> reviewEntities = reviewRepository.findByMovieId(movieId);
-        List<Review> reviews = mapper.entityListToApiList(reviewEntities);
-        reviews.forEach(review -> review.setServiceAddress(serviceUtil.getServiceAddress()));
+        List<Review> reviews = getByMovieId(movieId);
 
-        log.debug("getReviews: response size: {}", reviews.size());
-
-        return reviews;
+        return getAsyncFlux(reviews).log();
     }
 
     @Override
@@ -64,5 +61,16 @@ public class BaseReviewService implements ReviewService {
     public void deleteReviews(int movieId) {
         log.debug("deleteReviews: tries to delete reviews for the movie with movieId: {}", movieId);
         reviewRepository.deleteAll(reviewRepository.findByMovieId(movieId));
+    }
+
+    private <T> Flux<T> getAsyncFlux(Iterable<T> reviews) {
+        return Flux.fromIterable(reviews).publishOn(scheduler);
+    }
+
+    private List<Review> getByMovieId(int movieId) {
+        List<ReviewEntity> reviewEntities = reviewRepository.findByMovieId(movieId);
+        List<Review> reviews = mapper.entityListToApiList(reviewEntities);
+        reviews.forEach(review -> review.setServiceAddress(serviceUtil.getServiceAddress()));
+        return reviews;
     }
 }
