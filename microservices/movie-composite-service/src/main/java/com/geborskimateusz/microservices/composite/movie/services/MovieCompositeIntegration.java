@@ -7,21 +7,25 @@ import com.geborskimateusz.api.core.recommendation.Recommendation;
 import com.geborskimateusz.api.core.recommendation.RecommendationService;
 import com.geborskimateusz.api.core.review.Review;
 import com.geborskimateusz.api.core.review.ReviewService;
+import com.geborskimateusz.api.event.Event;
+import com.geborskimateusz.microservices.composite.movie.services.utils.MessageSources;
 import com.geborskimateusz.util.exceptions.InvalidInputException;
 import com.geborskimateusz.util.exceptions.NotFoundException;
 import com.geborskimateusz.util.http.HttpErrorInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
+import org.springframework.cloud.stream.annotation.EnableBinding;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 
 /**
@@ -30,19 +34,23 @@ import java.util.List;
  **/
 
 @Slf4j
+@EnableBinding(MessageSources.class)
 @Component
 public class MovieCompositeIntegration implements MovieService, RecommendationService, ReviewService {
 
-    private final RestTemplate restTemplate;
+    private final WebClient webClient;
     private final ObjectMapper mapper;
 
     private final String movieServiceUrl;
     private final String recommendationServiceUrl;
     private final String reviewServiceUrl;
 
+    private final MessageSources messageSources;
+
     @Autowired
     public MovieCompositeIntegration(
-            RestTemplate restTemplate,
+            WebClient.Builder webClient,
+            MessageSources messageSources,
             ObjectMapper mapper,
 
             @Value("${app.movie-service.host}") String movieServiceHost,
@@ -54,7 +62,8 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
             @Value("${app.review-service.host}") String reviewServiceHost,
             @Value("${app.review-service.port}") int reviewServicePort
     ) {
-        this.restTemplate = restTemplate;
+        this.webClient = webClient.build();
+        this.messageSources = messageSources;
         this.mapper = mapper;
 
         movieServiceUrl = "http://" + movieServiceHost + ":" + movieServicePort + "/movie/";
@@ -63,162 +72,150 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
     }
 
     @Override
-    public Movie getMovie(Integer movieId) {
-        try {
-            String url = movieServiceUrl + movieId;
-            log.debug("Will call getMovie API on URL: {}", url);
+    public Mono<Movie> getMovie(Integer movieId) {
 
-            Movie movie = restTemplate.getForObject(url, Movie.class);
-            log.debug("Found a movie with id: {}", movie.getMovieId());
+        String url = movieServiceUrl + movieId;
 
-            return movie;
+        log.debug("Will call getMovie API on URL: {}", url);
 
-        } catch (HttpClientErrorException ex) {
-            throw handleHttpClientException(ex);
-        }
+        return webClient
+                .get().uri(url)
+                .retrieve()
+                .bodyToMono(Movie.class)
+                .log()
+                .onErrorMap(WebClientResponseException.class, this::handleHttpClientException);
     }
+
 
     @Override
     public Movie createMovie(Movie movie) {
-        try {
+        messageSources.outputReviews()
+                .send(MessageBuilder.withPayload(
+                        Event.builder()
+                                .eventType(Event.Type.CREATE)
+                                .key(movie.getMovieId())
+                                .data(movie)
+                                .build()
+                ).build());
 
-            String url = movieServiceUrl;
-            log.debug("Will post Movie to {}", url);
-
-            Movie posted = restTemplate.postForObject(url, movie, Movie.class);
-            log.debug("Created movie with id: {}", posted.getMovieId());
-
-            return posted;
-
-
-        } catch (HttpClientErrorException ex) {
-            throw handleHttpClientException(ex);
-        }
+        return movie;
     }
 
     @Override
     public void deleteMovie(Integer movieId) {
-
-        try {
-            String url = movieServiceUrl + movieId;
-            log.debug("Trying to delete Movie on url: {}", url);
-
-            restTemplate.delete(url);
-
-        } catch (HttpClientErrorException ex) {
-            throw handleHttpClientException(ex);
-        }
+        messageSources.outputMovies()
+                .send(MessageBuilder.withPayload(
+                        Event.builder()
+                                .eventType(Event.Type.DELETE)
+                                .key(movieId)
+                                .build())
+                        .build());
     }
 
     @Override
-    public List<Recommendation> getRecommendations(int movieId) {
+    public Flux<Recommendation> getRecommendations(int movieId) {
 
-        try {
+        String url = recommendationServiceUrl + "?movieId=" + movieId;
 
-            String url = recommendationServiceUrl + "?movieId=" + movieId;
+        log.debug("Will call the getRecommendations API on URL: {}", url);
 
-            log.debug("Will call getRecommendations API on URL: {}", url);
-            List<Recommendation> recommendations = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<List<Recommendation>>() {
-                    }).getBody();
-
-            log.debug("Found {} recommendations for a movie with id: {}", recommendations.size(), movieId);
-            return recommendations;
-
-
-        } catch (Exception ex) {
-            log.warn("Got an exception while requesting recommendations, return zero recommendations: {}", ex.getMessage());
-            return new ArrayList<>();
-        }
+        return webClient.get()
+                .uri(url)
+                .retrieve()
+                .bodyToFlux(Recommendation.class)
+                .log()
+                .onErrorResume(error -> Flux.empty());
     }
 
     @Override
     public Recommendation createRecommendation(Recommendation recommendation) {
-        try {
+        messageSources.outputReviews()
+                .send(MessageBuilder.withPayload(
+                        Event.builder()
+                                .eventType(Event.Type.CREATE)
+                                .key(recommendation.getRecommendationId())
+                                .data(recommendation)
+                                .build()
+                ).build());
 
-            String url = recommendationServiceUrl;
-            log.debug("Will post Recommendation to {}", url);
-
-            Recommendation posted = restTemplate.postForObject(url, recommendation, Recommendation.class);
-            log.debug("Created movie with id: {}", posted.getRecommendationId());
-
-            return posted;
-
-
-        } catch (HttpClientErrorException ex) {
-            throw handleHttpClientException(ex);
-        }
+        return recommendation;
     }
 
     @Override
     public void deleteRecommendations(int movieId) {
-        try {
-            String url = recommendationServiceUrl + "?movieId=" + movieId;
-            log.debug("Trying to delete Recommendations on url: {}", url);
-
-            restTemplate.delete(url);
-
-        } catch (HttpClientErrorException ex) {
-            throw handleHttpClientException(ex);
-        }
+        messageSources.outputRecommendations()
+                .send(MessageBuilder.withPayload(
+                        Event.builder()
+                                .eventType(Event.Type.DELETE)
+                                .key(movieId)
+                                .build())
+                        .build());
     }
 
     @Override
-    public List<Review> getReviews(int movieId) {
-        try {
-            String url = reviewServiceUrl + "?movieId=" + movieId;
+    public Flux<Review> getReviews(int movieId) {
+        String url = reviewServiceUrl + "?movieId=" + movieId;
 
-            log.debug("Will call getReviews API on URL: {}", url);
-            List<Review> reviews = restTemplate.exchange(
-                    url,
-                    HttpMethod.GET,
-                    null,
-                    new ParameterizedTypeReference<List<Review>>() {
-                    }).getBody();
+        log.debug("Will call the getReviews API on URL: {}", url);
 
-            log.debug("Found {} reviews for a movie with id: {}", reviews.size(), movieId);
-            return reviews;
-
-        } catch (Exception ex) {
-            log.warn("Got an exception while requesting reviews, return zero reviews: {}", ex.getMessage());
-            return new ArrayList<>();
-        }
+        return webClient.get()
+                .uri(url)
+                .retrieve()
+                .bodyToFlux(Review.class)
+                .log()
+                .onErrorResume(error -> Flux.empty());
     }
 
     @Override
     public Review createReview(Review review) {
-        try {
+        messageSources.outputReviews()
+                .send(MessageBuilder.withPayload(
+                        Event.builder()
+                                .eventType(Event.Type.CREATE)
+                                .key(review.getReviewId())
+                                .data(review)
+                                .build()
+                ).build());
 
-            String url = reviewServiceUrl;
-            log.debug("Will call createReview API on URL: {}", url);
-
-            Review posted = restTemplate.postForObject(url, review, Review.class);
-            log.debug("Created review with id: {}", posted.getReviewId());
-
-            return posted;
-
-        } catch (HttpClientErrorException ex) {
-            throw handleHttpClientException(ex);
-        }
+        return review;
     }
 
     @Override
     public void deleteReviews(int movieId) {
-        try {
-            String url = reviewServiceUrl + "?movieId=" + movieId;
-            log.debug("Trying to delete Reviews on url: {}", url);
+        messageSources.outputReviews()
+                .send(MessageBuilder.withPayload(
+                        Event.builder()
+                                .eventType(Event.Type.DELETE)
+                                .key(movieId)
+                                .build())
+                        .build());
+    }
 
-            restTemplate.delete(url);
 
-        } catch (HttpClientErrorException ex) {
-            throw handleHttpClientException(ex);
+    private Throwable handleHttpClientException(WebClientResponseException ex) {
+        if (!(ex instanceof WebClientResponseException)) {
+            log.warn("Got a unexpected error: {}, will rethrow it", ex.toString());
+            return ex;
+        }
+
+        WebClientResponseException wcre = (WebClientResponseException) ex;
+
+        switch (wcre.getStatusCode()) {
+
+            case NOT_FOUND:
+                return new NotFoundException(getErrorMessage(wcre));
+
+            case UNPROCESSABLE_ENTITY:
+                return new InvalidInputException(getErrorMessage(wcre));
+
+            default:
+                log.warn("Got a unexpected HTTP error: {}, will rethrow it", wcre.getStatusCode());
+                log.warn("Error body: {}", wcre.getResponseBodyAsString());
+                return wcre;
         }
     }
 
-    private String getErrorMessage(HttpClientErrorException ex) {
+    private String getErrorMessage(WebClientResponseException ex) {
         try {
             return mapper.readValue(ex.getResponseBodyAsString(), HttpErrorInfo.class).getMessage();
         } catch (IOException ioex) {
@@ -226,19 +223,4 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
         }
     }
 
-    private RuntimeException handleHttpClientException(HttpClientErrorException ex) {
-        switch (ex.getStatusCode()) {
-
-            case NOT_FOUND:
-                throw new NotFoundException(getErrorMessage(ex));
-
-            case UNPROCESSABLE_ENTITY:
-                throw new InvalidInputException(getErrorMessage(ex));
-
-            default:
-                log.warn("Got a unexpected HTTP error: {}, will rethrow it", ex.getStatusCode());
-                log.warn("Error body: {}", ex.getResponseBodyAsString());
-                throw ex;
-        }
-    }
 }

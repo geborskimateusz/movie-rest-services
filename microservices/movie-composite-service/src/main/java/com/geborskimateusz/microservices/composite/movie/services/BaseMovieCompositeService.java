@@ -11,6 +11,7 @@ import com.geborskimateusz.util.http.ServiceUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 
@@ -28,16 +29,21 @@ public class BaseMovieCompositeService implements MovieCompositeService {
     }
 
     @Override
-    public MovieAggregate getCompositeMovie(Integer movieId) {
+    public Mono<MovieAggregate> getCompositeMovie(Integer movieId) {
         log.debug("getCompositeMovie: lookup a movie aggregate for movieId: {}", movieId);
-        Movie movie = movieCompositeIntegration.getMovie(movieId);
 
-        if (movie == null) throw new NotFoundException("No movie found for movieId: " + movieId);
-
-        List<Recommendation> recommendations = movieCompositeIntegration.getRecommendations(movieId);
-        List<Review> reviews = movieCompositeIntegration.getReviews(movieId);
-
-        return CompositeAggregator.createMovieAggregate(movie, recommendations, reviews, serviceUtil.getServiceAddress());
+        return
+                Mono.zip(
+                        values -> CompositeAggregator.createMovieAggregate(
+                                (Movie) values[0],
+                                (List<Recommendation>) values[1],
+                                (List<Review>) values[2],
+                                serviceUtil.getServiceAddress()),
+                        movieCompositeIntegration.getMovie(movieId),
+                        movieCompositeIntegration.getRecommendations(movieId).collectList(),
+                        movieCompositeIntegration.getReviews(movieId).collectList()
+                ).doOnError(ex -> log.warn("getCompositeMovie failed: {}", ex.toString()))
+                        .log();
 
     }
 
@@ -82,7 +88,7 @@ public class BaseMovieCompositeService implements MovieCompositeService {
                         .serviceAddress(null)
                         .build();
 
-                log.debug("createReviewsFromBody -> reviews size: {}, actual: {}", body.getReviews().size(),review);
+                log.debug("createReviewsFromBody -> reviews size: {}, actual: {}", body.getReviews().size(), review);
                 movieCompositeIntegration.createReview(review);
             });
         }
@@ -100,7 +106,7 @@ public class BaseMovieCompositeService implements MovieCompositeService {
                         .serviceAddress(null)
                         .build();
 
-                log.debug("createRecommendationsFromBody -> recommendations size: {}, actual {}",body.getRecommendations().size(), recommendation);
+                log.debug("createRecommendationsFromBody -> recommendations size: {}, actual {}", body.getRecommendations().size(), recommendation);
                 movieCompositeIntegration.createRecommendation(recommendation);
             });
         }

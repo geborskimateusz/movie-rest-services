@@ -25,6 +25,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -84,9 +86,9 @@ public class MovieCompositeServiceApplicationTests {
         List<Recommendation> recommendations = getRecommendations(movie);
         List<Review> reviews = getReviews(movie);
 
-        Mockito.when(movieCompositeIntegration.getMovie(given)).thenReturn(movie);
-        Mockito.when(movieCompositeIntegration.getRecommendations(movie.getMovieId())).thenReturn(recommendations);
-        Mockito.when(movieCompositeIntegration.getReviews(movie.getMovieId())).thenReturn(reviews);
+        Mockito.when(movieCompositeIntegration.getMovie(given)).thenReturn(Mono.just(movie));
+        Mockito.when(movieCompositeIntegration.getRecommendations(movie.getMovieId())).thenReturn(Flux.fromIterable(recommendations));
+        Mockito.when(movieCompositeIntegration.getReviews(movie.getMovieId())).thenReturn(Flux.fromIterable(reviews));
 
         getAndVerifyMovie(given, HttpStatus.OK)
                 .jsonPath("$.movieId").isEqualTo(given)
