@@ -81,6 +81,28 @@ app:
     host: localhost
     port: 7003
 
+
+spring.cloud.stream:
+  defaultBinder: rabbit
+  default.contentType: application/json
+  bindings:
+    output-movies:
+      destination: movies
+    output-recommendations:
+      destination: recommendations
+    output-reviews:
+      destination: reviews
+
+spring.cloud.stream.kafka.binder:
+  brokers: 127.0.0.1
+  defaultBrokerPort: 9092
+
+spring.rabbitmq:
+  host: 127.0.0.1
+  port: 5672
+  username: guest
+  password: guest
+
 ---
 
 spring.profiles: docker
@@ -97,3 +119,7 @@ app:
   review-service:
     host: review
     port: 8080
+
+spring.rabbitmq.host: rabbitmq
+
+spring.cloud.stream.kafka.binder.brokers: kafka

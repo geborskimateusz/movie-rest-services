@@ -5,7 +5,7 @@ import org.springframework.messaging.MessageChannel;
 
 public interface MessageSources {
 
-    String OUTPUT_MOVIES= "output-products";
+    String OUTPUT_MOVIES= "output-movies";
     String OUTPUT_RECOMMENDATIONS = "output-recommendations";
     String OUTPUT_REVIEWS = "output-reviews";
 
