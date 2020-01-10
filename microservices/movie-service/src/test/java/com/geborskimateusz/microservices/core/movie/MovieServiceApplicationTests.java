@@ -2,31 +2,35 @@ package com.geborskimateusz.microservices.core.movie;
 
 import com.geborskimateusz.api.core.movie.Movie;
 import com.geborskimateusz.api.core.movie.MovieService;
+import com.geborskimateusz.api.event.Event;
 import com.geborskimateusz.microservices.core.movie.persistence.MovieEntity;
 import com.geborskimateusz.microservices.core.movie.persistence.MovieRepository;
 import io.swagger.models.auth.In;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.stream.messaging.Sink;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.integration.channel.AbstractMessageChannel;
+import org.springframework.messaging.support.GenericMessage;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
 import reactor.core.publisher.Mono;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = RANDOM_PORT, properties = {"spring.data.mongodb.port: 0"})
-@AutoConfigureWebTestClient(timeout = "10000")
+//@AutoConfigureWebTestClient(timeout = "10000")
 public class MovieServiceApplicationTests {
 
     @Autowired
@@ -35,12 +39,28 @@ public class MovieServiceApplicationTests {
     @Autowired
     MovieRepository movieRepository;
 
+    @Autowired
+    private Sink channels;
+
+    private AbstractMessageChannel input = null;
+
+    @BeforeEach
+    void setUp() {
+        input = (AbstractMessageChannel) channels.input();
+        movieRepository.deleteAll().block();
+    }
 
     @Test
     public void getMovie() {
         Integer given = 1;
 
-        postAndVerify(given, HttpStatus.OK);
+        assertNull(movieRepository.findByMovieId(given).block());
+        assertEquals(0,(long )movieRepository.count().block());
+
+        sendCreateMovie(given);
+
+        assertNotNull(movieRepository.findByMovieId(given).block());
+        assertEquals(1,(long )movieRepository.count().block());
 
         getAndVerify(given, HttpStatus.OK)
                 .jsonPath("$.movieId").isEqualTo(given)
@@ -55,7 +75,7 @@ public class MovieServiceApplicationTests {
         Integer given = 1;
         Integer requested = 2;
 
-        postAndVerify(given, HttpStatus.OK);
+        sendCreateMovie(given);
 
         assertFalse(movieRepository.findByMovieId(requested).blockOptional().isPresent());
 
@@ -68,7 +88,7 @@ public class MovieServiceApplicationTests {
     public void getMovieThrowsInvalidInputExc() {
         Integer given = -1;
 
-        postAndVerify(given, HttpStatus.OK);
+        sendCreateMovie(given);
 
         getAndVerify(given, HttpStatus.UNPROCESSABLE_ENTITY)
                 .jsonPath("$.message").isEqualTo("Invalid movieId: " + given);
@@ -86,21 +106,24 @@ public class MovieServiceApplicationTests {
     public void deleteMovie() {
         Integer given = 1;
 
-        postAndVerify(given, HttpStatus.OK);
+        sendCreateMovie(given);
 
         assertTrue(movieRepository.findByMovieId(given).blockOptional().isPresent());
 
-        deleteAndVerify(given, HttpStatus.OK);
+        sendDeleteMovie(given);
+
+        assertNull(movieRepository.findByMovieId(given).block());
+        assertEquals(0,(long )movieRepository.count().block());
+    }
+
+    private void sendDeleteMovie(Integer given) {
+        Event<Integer, Movie> event = new Event<>(Event.Type.DELETE,given,null);
+        input.send(new GenericMessage<>(event));
     }
 
 
     private WebTestClient.BodyContentSpec postAndVerify(Integer id, HttpStatus httpStatus) {
-        Movie movie = Movie.builder()
-                .movieId(id)
-                .title("Title for movie " + id)
-                .genre("Genre for movie " + id)
-                .address("Address for movie " + id)
-                .build();
+        Movie movie = getMovie(id);
 
         return webTestClient.post()
                 .uri("/movie")
@@ -110,6 +133,15 @@ public class MovieServiceApplicationTests {
                 .expectStatus().isEqualTo(httpStatus)
                 .expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8)
                 .expectBody();
+    }
+
+    private Movie getMovie(Integer id) {
+        return Movie.builder()
+                .movieId(id)
+                .title("Title for movie " + id)
+                .genre("Genre for movie " + id)
+                .address("Address for movie " + id)
+                .build();
     }
 
     private WebTestClient.BodyContentSpec getAndVerify(Integer id, HttpStatus httpStatus) {
@@ -132,6 +164,12 @@ public class MovieServiceApplicationTests {
                 .exchange()
                 .expectStatus().isEqualTo(httpStatus)
                 .expectBody();
+    }
+
+    private void sendCreateMovie(Integer given) {
+        Movie movie = getMovie(given);
+        Event<Integer, Movie> event = new Event<>(Event.Type.CREATE, given, movie);
+        input.send(new GenericMessage<>(event));
     }
 
 
