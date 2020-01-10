@@ -1,24 +1,29 @@
 package com.geborskimateusz.microservices.core.recommendation;
 
 import com.geborskimateusz.api.core.recommendation.Recommendation;
+import com.geborskimateusz.api.event.Event;
 import com.geborskimateusz.microservices.core.recommendation.persistence.RecommendationRepository;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.stream.messaging.Sink;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.integration.channel.AbstractMessageChannel;
+import org.springframework.messaging.MessagingException;
+import org.springframework.messaging.support.GenericMessage;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import static org.assertj.core.api.Java6Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static reactor.core.publisher.Mono.just;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {"spring.data.mongodb.port: 0"})
-@AutoConfigureWebTestClient(timeout = "10000")
 public class RecommendationServiceApplicationTests {
 
     @Autowired
@@ -27,17 +32,29 @@ public class RecommendationServiceApplicationTests {
     @Autowired
     RecommendationRepository recommendationRepository;
 
+    @Autowired
+    Sink sink;
+
+    AbstractMessageChannel input = null;
+
+    @BeforeEach
+    void setUp() {
+        input = (AbstractMessageChannel) sink.input();
+        recommendationRepository.deleteAll().block();
+    }
+
+
     @Test
     public void getRecommendations() {
-        String movieId = "1";
 
 
-        postAndVerify(movieId, "2", HttpStatus.OK);
-        postAndVerify(movieId, "3", HttpStatus.OK);
-        postAndVerify(movieId, "4", HttpStatus.OK);
+        int movieId = 1;
+        sendCreateRecommendationEvent(movieId, 2);
+        sendCreateRecommendationEvent(movieId, 3);
+        sendCreateRecommendationEvent(movieId, 4);
 
 
-        assertEquals(Long.valueOf(3), recommendationRepository.count().block());
+        assertEquals(3, (long) recommendationRepository.count().block());
 
         getAndVerify(movieId, HttpStatus.OK)
                 .jsonPath("$.length()").isEqualTo(3)
@@ -46,7 +63,7 @@ public class RecommendationServiceApplicationTests {
 
     @Test
     public void getRecommendationsThrowsInvalidInputException() {
-        String movieId = "0";
+        Integer movieId = 0;
 
         getAndVerify(movieId, HttpStatus.UNPROCESSABLE_ENTITY)
                 .jsonPath("$.message").isEqualTo("Invalid movieId: " + movieId);
@@ -61,28 +78,36 @@ public class RecommendationServiceApplicationTests {
 
     @Test
     public void createRecommendationThrowsDuplicateKeyException() {
-        String movieId = "1";
-        String recommendationId = "2";
+        Integer movieId = 1;
+        Integer recommendationId = 2;
 
-        postAndVerify(movieId, recommendationId, HttpStatus.OK);
-
-        assertEquals(Long.valueOf(1), recommendationRepository.count().block());
-
-
-        postAndVerify(movieId, recommendationId, HttpStatus.INTERNAL_SERVER_ERROR)
-        .jsonPath("$.message").isEqualTo("Non unique id for recommendation " + recommendationId);
+        sendCreateRecommendationEvent(movieId, recommendationId);
 
         assertEquals(Long.valueOf(1), recommendationRepository.count().block());
+
+
+        try {
+            sendCreateRecommendationEvent(movieId, recommendationId);
+            fail("Expected a MessagingException here!");
+        } catch (MessagingException me) {
+            if (me.getCause() instanceof DuplicateKeyException) {
+                DuplicateKeyException iie = (DuplicateKeyException) me.getCause();
+                assertEquals("Non unique id for recommendation 2", iie.getMessage());
+            } else {
+                fail("Expected a InvalidInputException as the root cause!");
+            }
+        }
+
+        assertEquals(1, (long) recommendationRepository.count().block());
     }
-
 
 
     @Test
     public void postRecommendations() {
-        String movieId = "1";
-        String recommendationId = "2";
+        Integer movieId = 1;
+        Integer recommendationId = 2;
 
-        postAndVerify(movieId, recommendationId, HttpStatus.OK);
+        sendCreateRecommendationEvent(movieId, recommendationId);
 
         assertEquals(Long.valueOf(1), recommendationRepository.count().block());
 
@@ -94,36 +119,23 @@ public class RecommendationServiceApplicationTests {
 
     @Test
     public void deleteRecommendations() {
-        String movieId = "1";
+        Integer movieId = 1;
 
-        postAndVerify(movieId, "2", HttpStatus.OK);
-        postAndVerify(movieId, "3", HttpStatus.OK);
-        postAndVerify(movieId, "4", HttpStatus.OK);
+        sendCreateRecommendationEvent(movieId, 2);
+        sendCreateRecommendationEvent(movieId, 3);
+        sendCreateRecommendationEvent(movieId, 4);
 
-        assertEquals(3, recommendationRepository.findByMovieId(Integer.parseInt(movieId)).collectList().block().size());
+        assertEquals(3, recommendationRepository.findByMovieId(movieId).collectList().block().size());
 
-        deleteAndVerify(movieId, HttpStatus.OK);
+        deleteAndVerify(movieId);
 
-        assertEquals(0, recommendationRepository.findByMovieId(Integer.parseInt(movieId)).collectList().block().size());
+        assertEquals(0, recommendationRepository.findByMovieId(movieId).collectList().block().size());
     }
 
-    @Test
-    public void deleteRecommendationsThrowsInvalidInputException() {
-        String invalidMovieId = "0";
-        String validMovieId = "1";
 
-        postAndVerify(validMovieId, "2", HttpStatus.OK);
-        postAndVerify(validMovieId, "3", HttpStatus.OK);
-        postAndVerify(validMovieId, "4", HttpStatus.OK);
-
-        assertEquals(3, recommendationRepository.findByMovieId(Integer.parseInt(validMovieId)).collectList().block().size());
-
-        deleteAndVerify(invalidMovieId, HttpStatus.UNPROCESSABLE_ENTITY)
-                .jsonPath("$.message").isEqualTo("Invalid movieId: " + invalidMovieId);
-
-        assertEquals(3, recommendationRepository.findByMovieId(Integer.parseInt(validMovieId)).collectList().block().size());
+    private WebTestClient.BodyContentSpec getAndVerify(Integer movieId, HttpStatus httpStatus) {
+        return getAndVerify(movieId.toString(), httpStatus);
     }
-
 
     private WebTestClient.BodyContentSpec getAndVerify(String movieId, HttpStatus httpStatus) {
         return webTestClient.get()
@@ -135,33 +147,19 @@ public class RecommendationServiceApplicationTests {
                 .expectBody();
     }
 
-
-    private WebTestClient.BodyContentSpec postAndVerify(String movieId, String recommendationId, HttpStatus httpStatus) {
-
-        Recommendation recommendation = Recommendation.builder().movieId(Integer.parseInt(movieId)).recommendationId(Integer.parseInt(recommendationId)).author("Author 3").rate(3).content("Content 3").build();
-
-        return webTestClient.post()
-                .uri("/recommendation")
-                .body(just(recommendation), Recommendation.class)
-                .accept(MediaType.APPLICATION_JSON_UTF8)
-                .exchange()
-                .expectStatus().isEqualTo(httpStatus)
-                .expectHeader().contentType(MediaType.APPLICATION_JSON_UTF8)
-                .expectBody();
-
+    private void sendCreateRecommendationEvent(int movieId, int recommendationId) {
+        Recommendation recommendation = Recommendation.builder().movieId(movieId).recommendationId(recommendationId).author("Author 3").rate(3).content("Content 3").build();
+        Event event = Event.builder().eventType(Event.Type.CREATE).key(movieId).data(recommendation).build();
+        input.send(new GenericMessage<>(event));
     }
 
-    private WebTestClient.BodyContentSpec deleteAndVerify(String movieId, HttpStatus httpStatus) {
-        return webTestClient.delete()
-                .uri("/recommendation?movieId="+movieId)
-                .accept(MediaType.APPLICATION_JSON_UTF8)
-                .exchange()
-                .expectStatus().isEqualTo(httpStatus)
-                .expectBody();
+    private void deleteAndVerify(int movieId) {
+        Event event = Event.builder().eventType(Event.Type.DELETE).key(movieId).data(null).build();
+        input.send(new GenericMessage<>(event));
     }
 
     @AfterEach
-    public void cleanUp()  {
+    public void cleanUp() {
         recommendationRepository.deleteAll().block();
     }
 

@@ -30,7 +30,6 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = RANDOM_PORT, properties = {"spring.data.mongodb.port: 0"})
-//@AutoConfigureWebTestClient(timeout = "10000")
 public class MovieServiceApplicationTests {
 
     @Autowired
