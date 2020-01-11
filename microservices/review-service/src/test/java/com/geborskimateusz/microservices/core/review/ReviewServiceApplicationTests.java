@@ -26,6 +26,7 @@ public class ReviewServiceApplicationTests {
     @Autowired
     ReviewRepository reviewRepository;
 
+
     @Test
     public void getReviews() {
         String movieId = "1";

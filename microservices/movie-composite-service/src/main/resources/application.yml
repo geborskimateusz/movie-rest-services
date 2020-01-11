@@ -66,6 +66,8 @@ server:
 
 management:
   endpoints:
+    health:
+      show-details: "ALWAYS"
     web:
       exposure:
         include: '*'
@@ -88,10 +90,16 @@ spring.cloud.stream:
   bindings:
     output-movies:
       destination: movies
+      producer:
+        required-groups: auditGroup
     output-recommendations:
       destination: recommendations
+      producer:
+      required-groups: auditGroup
     output-reviews:
       destination: reviews
+      producer:
+      required-groups: auditGroup
 
 spring.cloud.stream.kafka.binder:
   brokers: 127.0.0.1
