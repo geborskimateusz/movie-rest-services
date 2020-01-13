@@ -95,11 +95,11 @@ spring.cloud.stream:
     output-recommendations:
       destination: recommendations
       producer:
-      required-groups: auditGroup
+        required-groups: auditGroup
     output-reviews:
       destination: reviews
       producer:
-      required-groups: auditGroup
+        required-groups: auditGroup
 
 spring.cloud.stream.kafka.binder:
   brokers: 127.0.0.1
