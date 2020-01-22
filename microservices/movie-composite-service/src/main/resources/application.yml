@@ -1,4 +1,5 @@
 api:
+
   common:
     version: 1.0.0
     title: Movie API
@@ -22,8 +23,8 @@ api:
         1. Base movie information
         1. Reviews
         1. Recommendations
-        1. Service Addresses\n(technical information regarding the addresses of the microservices that created the response)
-
+        1. Service Addresses
+        (technical information regarding the addresses of the microservices that created the response)
         # Expected partial and error responses
         In the following cases, only a partial response be created (used to simplify testing of error conditions)
 
@@ -47,11 +48,9 @@ api:
       notes: |
         # Normal response
         The composite movie information posted to the API will be splitted up and stored as separate movie-info, recommendation and review entities.
-
         # Expected error responses
         1. If a movie with the same movieId as specified in the posted information already exists,
            an <b>422 - Unprocessable Entity</b> error with a "duplicate key" error message will be returned
-
     delete-composite-movie:
       description: Deletes a composite movie
       notes: |
@@ -59,18 +58,7 @@ api:
                 Entities for movie information, recommendations and reviews related to the specificed movieId will be deleted.
                 The implementation of the delete method is idempotent, i.e. it can be called several times with the same response.
                 This means that a delete request of a non existing movie will return <b>200 Ok</b>.
-
-
-server:
-  port: 7000
-
-management:
-  endpoints:
-    health:
-      show-details: "ALWAYS"
-    web:
-      exposure:
-        include: '*'
+server.port: 7000
 
 app:
   movie-service:
@@ -82,7 +70,6 @@ app:
   review-service:
     host: localhost
     port: 7003
-
 
 spring.cloud.stream:
   defaultBinder: rabbit
@@ -111,8 +98,14 @@ spring.rabbitmq:
   username: guest
   password: guest
 
----
+logging:
+  level:
+    root: INFO
+    se.magnus: DEBUG
 
+management.endpoint.health.show-details: "ALWAYS"
+management.endpoints.web.exposure.include: "*"
+---
 spring.profiles: docker
 
 server.port: 8080

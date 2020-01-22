@@ -71,6 +71,28 @@ function waitForService() {
   done
 }
 
+function waitForMessageProcessing() {
+    echo "Wait for messages to be processed... "
+
+    # Give background processing some time to complete...
+    sleep 1
+
+    n=0
+    until testCompositeCreated
+    do
+        n=$((n + 1))
+        if [[ $n == 40 ]]
+        then
+            echo " Give up"
+            exit 1
+        else
+            sleep 6
+            echo -n ", retry #$n "
+        fi
+    done
+    echo "All messages are now processed!"
+}
+
 function recreateComposite() {
   local movieId=$1
   local composite=$2
@@ -192,16 +214,19 @@ if [[ $@ == *"start"* ]]; then
   echo "$ mvn clean install"
   mvn clean install
 
-  echo "$ docker-compose build"
-  docker-compose build
+  #echo "$ docker-compose build"
+  #docker-compose build
 
   echo "$ docker-compose up -d"
   docker-compose up -d
 fi
 
-waitForService curl -X DELETE http://$HOST:$PORT/movie-composite/13
+#waitForService curl -X DELETE http://$HOST:$PORT/movie-composite/13
+waitForService curl http://$HOST:$PORT/actuator/health
 
 setupData
+
+waitForMessageProcessing
 
 # Verify that a normal request works, expect three recommendations and on review
 assertCurl 200 "curl http://$HOST:$PORT/movie-composite/1 -s"
