@@ -50,7 +50,8 @@ public class BaseMovieCompositeService implements MovieCompositeService {
     public void createCompositeMovie(MovieAggregate body) {
         try {
 
-            log.debug("createCompositeMovie: Trying to create new Movie Entity for movieId: {} ", body.getMovieId());
+            log.info("createCompositeMovie: Trying to create new Movie Entity for movieId: {} ", body.getMovieId());
+            log.info(body.toString());
 
             createMovieFromBody(body);
             createRecommendationsFromBody(body);

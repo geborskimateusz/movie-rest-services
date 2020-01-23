@@ -14,4 +14,14 @@ public class RecommendationSummary {
     private String author;
     private int rate;
     private String content;
+
+    @Override
+    public String toString() {
+        return "RecommendationSummary{" +
+                "recommendationId=" + recommendationId +
+                ", author='" + author + '\'' +
+                ", rate=" + rate +
+                ", content='" + content + '\'' +
+                '}';
+    }
 }

@@ -277,14 +277,14 @@ then
 fi
 
 
-
+#
 #    body=\
-#'{"movieId":9992,"genre":"product 1","title":"lalalla", "recommendations":[
-#        {"recommendationId":998,"author":"author 1","rate":1,"content":"content 1"},
-#        {"recommendationId":997,"author":"author 2","rate":2,"content":"content 2"},
-#        {"recommendationId":996,"author":"author 3","rate":3,"content":"content 3"}
+#'{"movieId":333,"genre":"product 1","title":"lalalla", "recommendations":[
+#        {"recommendationId":321,"author":"author 1","rate":1,"content":"content 1"},
+#        {"recommendationId":991,"author":"author 2","rate":2,"content":"content 2"},
+#        {"recommendationId":993,"author":"author 3","rate":3,"content":"content 3"}
 #    ], "reviews":[
-#        {"reviewId":456,"author":"author 1","subject":"subject 1","content":"content 1"},
-#        {"reviewId":475,"author":"author 2","subject":"subject 2","content":"content 2"},
-#        {"reviewId":754,"author":"author 3","subject":"subject 3","content":"content 3"}
+#        {"reviewId":451,"author":"author 1","subject":"subject 1","content":"content 1"},
+#        {"reviewId":471,"author":"author 2","subject":"subject 2","content":"content 2"},
+#        {"reviewId":751,"author":"author 3","subject":"subject 3","content":"content 3"}
 #    ]}'

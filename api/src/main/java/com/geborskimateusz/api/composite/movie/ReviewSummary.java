@@ -15,4 +15,13 @@ public class ReviewSummary {
     private String subject;
     private String content;
 
+    @Override
+    public String toString() {
+        return "ReviewSummary{" +
+                "reviewId=" + reviewId +
+                ", author='" + author + '\'' +
+                ", subject='" + subject + '\'' +
+                ", content='" + content + '\'' +
+                '}';
+    }
 }

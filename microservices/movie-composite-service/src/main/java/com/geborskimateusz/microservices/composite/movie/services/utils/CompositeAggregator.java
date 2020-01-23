@@ -7,10 +7,12 @@ import com.geborskimateusz.api.composite.movie.ServiceAddresses;
 import com.geborskimateusz.api.core.movie.Movie;
 import com.geborskimateusz.api.core.recommendation.Recommendation;
 import com.geborskimateusz.api.core.review.Review;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class CompositeAggregator {
 
     public static MovieAggregate createMovieAggregate(Movie movie, List<Recommendation> recommendations, List<Review> reviews, String serviceAddress) {
@@ -53,7 +55,7 @@ public class CompositeAggregator {
                 .rec(recommendationAddress)
                 .build();
 
-        return MovieAggregate.builder()
+        MovieAggregate aggregate = MovieAggregate.builder()
                 .movieId(movieId)
                 .title(title)
                 .genre(genre)
@@ -61,6 +63,11 @@ public class CompositeAggregator {
                 .reviews(reviewSummaries)
                 .serviceAddresses(serviceAddresses)
                 .build();
+
+        log.info("Created aggregate:");
+        log.info(aggregate.toString());
+
+        return aggregate;
     }
 
 }

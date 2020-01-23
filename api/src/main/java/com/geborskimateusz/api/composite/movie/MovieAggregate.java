@@ -19,4 +19,15 @@ public class MovieAggregate {
     private List<ReviewSummary> reviews;
     private ServiceAddresses serviceAddresses;
 
+    @Override
+    public String toString() {
+        return "MovieAggregate{" +
+                "movieId=" + movieId +
+                ", title='" + title + '\'' +
+                ", genre='" + genre + '\'' +
+                ", recommendations=" + recommendations +
+                ", reviews=" + reviews +
+                ", serviceAddresses=" + serviceAddresses +
+                '}';
+    }
 }
