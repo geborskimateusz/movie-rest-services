@@ -250,7 +250,7 @@ waitForMessageProcessing
 assertCurl 200 "curl http://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS -s"
 assertEqual "$MOV_ID_REVS_RECS" $(echo $RESPONSE | jq .movieId)
 assertEqual 3 $(echo $RESPONSE | jq ".recommendations | length")
-assertEqual 3 $(echo $RESPONSE | jq ".reviews | length")
+assertEqual 1 $(echo $RESPONSE | jq ".reviews | length")
 
 # Verify that a 404 (Not Found) error is returned for a non existing movieId ($MOV_ID_NOT_FOUND)
 assertCurl 404 "curl http://$HOST:$PORT/movie-composite/$MOV_ID_NOT_FOUND -s"
@@ -275,3 +275,16 @@ then
     echo "$ docker-compose down --remove-orphans"
     docker-compose down --remove-orphans
 fi
+
+
+
+#    body=\
+#'{"movieId":9992,"genre":"product 1","title":"lalalla", "recommendations":[
+#        {"recommendationId":998,"author":"author 1","rate":1,"content":"content 1"},
+#        {"recommendationId":997,"author":"author 2","rate":2,"content":"content 2"},
+#        {"recommendationId":996,"author":"author 3","rate":3,"content":"content 3"}
+#    ], "reviews":[
+#        {"reviewId":456,"author":"author 1","subject":"subject 1","content":"content 1"},
+#        {"reviewId":475,"author":"author 2","subject":"subject 2","content":"content 2"},
+#        {"reviewId":754,"author":"author 3","subject":"subject 3","content":"content 3"}
+#    ]}'

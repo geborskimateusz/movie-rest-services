@@ -88,7 +88,7 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
 
     @Override
     public Movie createMovie(Movie movie) {
-        messageSources.outputReviews()
+        messageSources.outputMovies()
                 .send(MessageBuilder.withPayload(
                         Event.builder()
                                 .eventType(Event.Type.CREATE)
