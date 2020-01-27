@@ -6,7 +6,6 @@ import lombok.*;
 @Getter
 @Builder
 @AllArgsConstructor
-@ToString
 public class Movie {
     private int movieId;
     private String title;
@@ -18,5 +17,15 @@ public class Movie {
         title = null;
         genre = null;
         address = "";
+    }
+
+    @Override
+    public String toString() {
+        return "Movie{" +
+                "movieId=" + movieId +
+                ", title='" + title + '\'' +
+                ", genre='" + genre + '\'' +
+                ", address='" + address + '\'' +
+                '}';
     }
 }

@@ -30,6 +30,7 @@ public class MessageProcessor {
             case CREATE:
                 Review review = event.getData();
                 log.info("Create review with ID: {}/{}", review.getMovieId(), review.getReviewId());
+                log.info(review.toString());
                 reviewService.createReview(review);
                 break;
 

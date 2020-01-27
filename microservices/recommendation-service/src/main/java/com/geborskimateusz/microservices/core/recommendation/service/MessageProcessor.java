@@ -31,6 +31,7 @@ public class MessageProcessor {
             case CREATE:
                 Recommendation recommendation = event.getData();
                 log.info("Create recommendation with ID: {}", recommendation.getRecommendationId());
+                log.info(recommendation.toString());
                 recommendationService.createRecommendation(recommendation);
                 break;
 

@@ -65,7 +65,7 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
         this.messageSources = messageSources;
         this.mapper = mapper;
 
-        movieServiceUrl = "http://" + movieServiceHost + ":" + movieServicePort + "/movie/";
+        movieServiceUrl = "http://" + movieServiceHost + ":" + movieServicePort + "/movie";
         recommendationServiceUrl = "http://" + recommendationServiceHost + ":" + recommendationServicePort + "/recommendation";
         reviewServiceUrl = "http://" + reviewServiceHost + ":" + reviewServicePort + "/review";
     }
@@ -88,6 +88,7 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
 
     @Override
     public Movie createMovie(Movie movie) {
+
         messageSources.outputMovies()
                 .send(MessageBuilder.withPayload(
                         Event.builder()
@@ -204,7 +205,7 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
 
     private Mono<Health> getHealth(String url) {
         url += "/actuator/health";
-        log.debug("Will call the Health API on URL: {}", url);
+        log.info("Will call the Health API on URL: {}", url);
         return webClient.get().uri(url).retrieve().bodyToMono(String.class)
                 .map(s -> new Health.Builder().up().build())
                 .onErrorResume(ex -> Mono.just(new Health.Builder().down(ex).build()))

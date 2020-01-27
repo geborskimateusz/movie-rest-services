@@ -41,8 +41,13 @@ logging:
     se.magnus: DEBUG
     org.springframework.data.mongodb.core.MongoTemplate: DEBUG
 
-management.endpoint.health.show-details: "ALWAYS"
-management.endpoints.web.exposure.include: "*"
+management:
+  endpoint:
+    health:
+      show-details=always:
+  endpoints:
+    web:
+      exposure:
 ---
 spring.profiles: docker
 

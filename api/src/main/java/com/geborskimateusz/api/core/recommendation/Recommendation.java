@@ -6,7 +6,6 @@ import lombok.*;
 @Setter
 @Builder
 @AllArgsConstructor
-@ToString
 public class Recommendation {
     private final Integer movieId;
     private final Integer recommendationId;
@@ -22,5 +21,17 @@ public class Recommendation {
         rate = 0;
         content = null;
         serviceAddress = null;
+    }
+
+    @Override
+    public String toString() {
+        return "Recommendation{" +
+                "movieId=" + movieId +
+                ", recommendationId=" + recommendationId +
+                ", author='" + author + '\'' +
+                ", rate=" + rate +
+                ", content='" + content + '\'' +
+                ", serviceAddress='" + serviceAddress + '\'' +
+                '}';
     }
 }

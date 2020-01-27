@@ -28,6 +28,7 @@ public class MessageProcessor {
             case CREATE:
                 Movie movie = event.getData();
                 log.info("Create movie with ID: {}", movie.getMovieId());
+                log.info(movie.toString());
                 movieService.createMovie(movie);
                 break;
 
