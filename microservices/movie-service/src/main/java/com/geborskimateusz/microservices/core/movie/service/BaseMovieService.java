@@ -45,6 +45,8 @@ public class BaseMovieService implements MovieService {
 
     @Override
     public Movie createMovie(Movie movie) {
+        log.info("BaseMovieService.createMovie(Movie movie), passed argument: {}",movie.toString());
+
         MovieEntity movieEntity = movieMapper.apiToEntity(movie);
 
         return movieRepository.save(movieEntity)

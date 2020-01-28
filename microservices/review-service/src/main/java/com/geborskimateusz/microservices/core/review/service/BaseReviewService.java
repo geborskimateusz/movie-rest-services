@@ -44,6 +44,8 @@ public class BaseReviewService implements ReviewService {
 
     @Override
     public Review createReview(Review review) {
+        log.info("BaseReviewService.createReview(Review review), passed argument: {}",review.toString());
+
         try {
             ReviewEntity reviewEntity = mapper.apiToEntity(review);
             ReviewEntity saved = reviewRepository.save(reviewEntity);

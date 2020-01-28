@@ -149,12 +149,12 @@ public class RecommendationServiceApplicationTests {
 
     private void sendCreateRecommendationEvent(int movieId, int recommendationId) {
         Recommendation recommendation = Recommendation.builder().movieId(movieId).recommendationId(recommendationId).author("Author 3").rate(3).content("Content 3").build();
-        Event event = Event.builder().eventType(Event.Type.CREATE).key(movieId).data(recommendation).build();
+        Event event = new Event(Event.Type.CREATE, movieId,recommendation);
         input.send(new GenericMessage<>(event));
     }
 
     private void deleteAndVerify(int movieId) {
-        Event event = Event.builder().eventType(Event.Type.DELETE).key(movieId).data(null).build();
+        Event event = new Event(Event.Type.DELETE,movieId,null);
         input.send(new GenericMessage<>(event));
     }
 

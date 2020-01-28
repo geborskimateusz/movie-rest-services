@@ -24,7 +24,6 @@ public class Event<K, T> {
         this.eventCreatedAt = null;
     }
 
-    @Builder
     public Event(Type eventType, K key, T data) {
         this.eventType = eventType;
         this.key = key;

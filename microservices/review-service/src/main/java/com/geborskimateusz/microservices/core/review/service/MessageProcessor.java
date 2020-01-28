@@ -1,6 +1,5 @@
 package com.geborskimateusz.microservices.core.review.service;
 
-import com.geborskimateusz.api.composite.movie.ReviewSummary;
 import com.geborskimateusz.api.core.review.Review;
 import com.geborskimateusz.api.core.review.ReviewService;
 import com.geborskimateusz.api.event.Event;

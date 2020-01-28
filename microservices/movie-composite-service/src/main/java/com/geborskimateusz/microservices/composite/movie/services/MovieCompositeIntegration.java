@@ -71,6 +71,42 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
     }
 
     @Override
+    public Movie createMovie(Movie movie) {
+        log.info("MovieCompositeIntegration.createMovie(Movie movie), passed argument: {}", movie.toString());
+
+        messageSources.outputMovies()
+                .send(MessageBuilder.withPayload(
+                        new Event<>(Event.Type.CREATE, movie.getMovieId(), movie)
+                ).build());
+
+        return movie;
+    }
+
+    @Override
+    public Recommendation createRecommendation(Recommendation recommendation) {
+        log.info("MovieCompositeIntegration.createRecommendation(Recommendation recommendation), passed argument: {}", recommendation.toString());
+
+        messageSources.outputReviews()
+                .send(MessageBuilder.withPayload(
+                        new Event<>(Event.Type.CREATE, recommendation.getMovieId(), recommendation)
+                ).build());
+
+        return recommendation;
+    }
+
+    @Override
+    public Review createReview(Review review) {
+        log.info("MovieCompositeIntegration.createReview(Review review), passed argument: {}", review.toString());
+
+        messageSources.outputReviews()
+                .send(MessageBuilder.withPayload(
+                        new Event<>(Event.Type.CREATE, review.getMovieId(), review)
+                ).build());
+
+        return review;
+    }
+
+    @Override
     public Mono<Movie> getMovie(Integer movieId) {
 
         String url = movieServiceUrl + movieId;
@@ -85,32 +121,6 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
                 .onErrorMap(WebClientResponseException.class, this::handleHttpClientException);
     }
 
-
-    @Override
-    public Movie createMovie(Movie movie) {
-
-        messageSources.outputMovies()
-                .send(MessageBuilder.withPayload(
-                        Event.builder()
-                                .eventType(Event.Type.CREATE)
-                                .key(movie.getMovieId())
-                                .data(movie)
-                                .build()
-                ).build());
-
-        return movie;
-    }
-
-    @Override
-    public void deleteMovie(Integer movieId) {
-        messageSources.outputMovies()
-                .send(MessageBuilder.withPayload(
-                        Event.builder()
-                                .eventType(Event.Type.DELETE)
-                                .key(movieId)
-                                .build())
-                        .build());
-    }
 
     @Override
     public Flux<Recommendation> getRecommendations(int movieId) {
@@ -128,31 +138,6 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
     }
 
     @Override
-    public Recommendation createRecommendation(Recommendation recommendation) {
-        messageSources.outputReviews()
-                .send(MessageBuilder.withPayload(
-                        Event.builder()
-                                .eventType(Event.Type.CREATE)
-                                .key(recommendation.getRecommendationId())
-                                .data(recommendation)
-                                .build()
-                ).build());
-
-        return recommendation;
-    }
-
-    @Override
-    public void deleteRecommendations(int movieId) {
-        messageSources.outputRecommendations()
-                .send(MessageBuilder.withPayload(
-                        Event.builder()
-                                .eventType(Event.Type.DELETE)
-                                .key(movieId)
-                                .build())
-                        .build());
-    }
-
-    @Override
     public Flux<Review> getReviews(int movieId) {
         String url = reviewServiceUrl + "?movieId=" + movieId;
 
@@ -167,28 +152,25 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
     }
 
     @Override
-    public Review createReview(Review review) {
-        messageSources.outputReviews()
+    public void deleteMovie(Integer movieId) {
+        messageSources.outputMovies()
                 .send(MessageBuilder.withPayload(
-                        Event.builder()
-                                .eventType(Event.Type.CREATE)
-                                .key(review.getReviewId())
-                                .data(review)
-                                .build()
-                ).build());
+                        new Event<>(Event.Type.DELETE, movieId, null)).build());
+    }
 
-        return review;
+    @Override
+    public void deleteRecommendations(int movieId) {
+        messageSources.outputRecommendations()
+                .send(MessageBuilder.withPayload(
+                        new Event<>(Event.Type.DELETE, movieId, null))
+                        .build());
     }
 
     @Override
     public void deleteReviews(int movieId) {
         messageSources.outputReviews()
                 .send(MessageBuilder.withPayload(
-                        Event.builder()
-                                .eventType(Event.Type.DELETE)
-                                .key(movieId)
-                                .build())
-                        .build());
+                        new Event<>(Event.Type.DELETE, movieId, null)).build());
     }
 
     public Mono<Health> getMovieHealth() {
