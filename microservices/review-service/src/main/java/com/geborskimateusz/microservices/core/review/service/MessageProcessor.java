@@ -23,6 +23,7 @@ public class MessageProcessor {
     public void process(Event<Integer, Review> event) {
 
         log.info("Process message created at {}...", event.getEventCreatedAt());
+        log.info("Process message body: {}", event.toString());
 
         switch (event.getEventType()) {
 
