@@ -7,11 +7,11 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class Review {
-    private final int movieId;
-    private final int reviewId;
-    private final String author;
-    private final String subject;
-    private final String content;
+    private int movieId;
+    private int reviewId;
+    private String author;
+    private String subject;
+    private String content;
     private String serviceAddress;
 
     public Review() {

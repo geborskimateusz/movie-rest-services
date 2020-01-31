@@ -44,7 +44,7 @@ public class BaseReviewService implements ReviewService {
 
     @Override
     public Review createReview(Review review) {
-        log.info("BaseReviewService.createReview(Review review), passed argument: {}",review.toString());
+        log.info("createReview: Trying to create Review entity, passed argument: {}",review.toString());
 
         try {
             ReviewEntity reviewEntity = mapper.apiToEntity(review);

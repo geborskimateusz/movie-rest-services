@@ -27,12 +27,4 @@ public class ReviewEntity {
     private String content;
     private String serviceAddress;
 
-    public ReviewEntity(Integer movieId, Integer reviewId, String author, String subject, String content, String serviceAddress) {
-        this.movieId = movieId;
-        this.reviewId = reviewId;
-        this.author = author;
-        this.subject = subject;
-        this.content = content;
-        this.serviceAddress = serviceAddress;
-    }
 }

@@ -86,7 +86,7 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
     public Recommendation createRecommendation(Recommendation recommendation) {
         log.info("MovieCompositeIntegration.createRecommendation(Recommendation recommendation), passed argument: {}", recommendation.toString());
 
-        messageSources.outputReviews()
+        messageSources.outputRecommendations()
                 .send(MessageBuilder.withPayload(
                         new Event<>(Event.Type.CREATE, recommendation.getMovieId(), recommendation)
                 ).build());

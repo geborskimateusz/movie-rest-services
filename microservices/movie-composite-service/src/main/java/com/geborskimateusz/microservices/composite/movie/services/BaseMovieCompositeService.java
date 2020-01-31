@@ -77,7 +77,7 @@ public class BaseMovieCompositeService implements MovieCompositeService {
 
 
     private void createReviewsFromBody(MovieAggregate body) {
-        if (body.getReviews() != null) {
+        if (body.getReviews() != null && !body.getReviews().isEmpty()) {
             body.getReviews().forEach(reviewSummary -> {
                 Review review = Review.builder()
                         .reviewId(reviewSummary.getReviewId())
@@ -88,14 +88,16 @@ public class BaseMovieCompositeService implements MovieCompositeService {
                         .serviceAddress(null)
                         .build();
 
-                log.debug("createReviewsFromBody -> reviews size: {}, actual: {}", body.getReviews().size(), review);
+                log.info("createReviewsFromBody -> reviews size: {}, actual: {}", body.getReviews().size(), review);
                 movieCompositeIntegration.createReview(review);
             });
         }
+
+        log.info("There are no reviews in MovieAggregate");
     }
 
     private void createRecommendationsFromBody(MovieAggregate body) {
-        if (body.getRecommendations() != null) {
+        if (body.getRecommendations() != null && !body.getRecommendations().isEmpty()) {
             body.getRecommendations().forEach(recommendationSummary -> {
                 Recommendation recommendation = Recommendation.builder()
                         .recommendationId(recommendationSummary.getRecommendationId())
@@ -106,10 +108,12 @@ public class BaseMovieCompositeService implements MovieCompositeService {
                         .serviceAddress(null)
                         .build();
 
-                log.debug("createRecommendationsFromBody -> recommendations size: {}, actual {}", body.getRecommendations().size(), recommendation);
+                log.info("createRecommendationsFromBody -> recommendations size: {}, actual {}", body.getRecommendations().size(), recommendation);
                 movieCompositeIntegration.createRecommendation(recommendation);
             });
         }
+
+        log.info("There are no recommendations in MovieAggregate");
     }
 
     private void createMovieFromBody(MovieAggregate body) {

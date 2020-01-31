@@ -278,13 +278,38 @@ fi
 
 
 
+
+#    body=\
+#'{"movieId":3331,"genre":"product 1","title":"lalalla", "recommendations":[
+#        {"recommendationId":3211,"author":"author 1","rate":1,"content":"content 1"},
+#        {"recommendationId":9911,"author":"author 2","rate":2,"content":"content 2"},
+#        {"recommendationId":9931,"author":"author 3","rate":3,"content":"content 3"}
+#    ], "reviews":[
+#        {"reviewId":4511,"author":"author 1","subject":"subject 1","content":"content 1"},
+#        {"reviewId":4711,"author":"author 2","subject":"subject 2","content":"content 2"},
+#        {"reviewId":7511,"author":"author 3","subject":"subject 3","content":"content 3"}
+#    ]}'
+
 #    body=\
 #'{"movieId":333,"genre":"product 1","title":"lalalla", "recommendations":[
 #        {"recommendationId":321,"author":"author 1","rate":1,"content":"content 1"},
 #        {"recommendationId":991,"author":"author 2","rate":2,"content":"content 2"},
 #        {"recommendationId":993,"author":"author 3","rate":3,"content":"content 3"}
 #    ], "reviews":[
-#        {"reviewId":451,"author":"author 1","subject":"subject 1","content":"content 1"},
-#        {"reviewId":471,"author":"author 2","subject":"subject 2","content":"content 2"},
-#        {"reviewId":751,"author":"author 3","subject":"subject 3","content":"content 3"}
+#        {"reviewId":451,"author":"author 1","subject":"subject 1","content":"content 1"}
+#    ]}'
+
+#    body=\
+#'{"movieId":334,"genre":"product 1","title":"lalalla", "recommendations":[], "reviews":[]}'
+
+#    body=\
+#'{"movieId":335,"genre":"product 1","title":"lalalla", "recommendations":[
+#        {"recommendationId":321,"author":"author 1","rate":1,"content":"content 1"}
+#    ], "reviews":[]}'
+
+#    body=\
+#'{"movieId":336,"genre":"product 1","title":"lalalla", "recommendations":[
+#        {"recommendationId":3211,"author":"author 1","rate":1,"content":"content 1"}
+#    ], "reviews":[
+#        {"reviewId":4511,"author":"author 1","subject":"subject 1","content":"content 1"}
 #    ]}'
