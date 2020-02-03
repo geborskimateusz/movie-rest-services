@@ -166,7 +166,7 @@ function setupData() {
       }
     ]
   }'
-  recreateComposite 1 "$body"
+  recreateComposite "$MOV_ID_REVS_RECS" "$body"
 
     body="{\"movieId\":$MOV_ID_NO_RECS"
     body+=\
@@ -233,6 +233,7 @@ echo "PORT=${PORT}"
 
 if [[ $@ == *"start"* ]]
 then
+
     echo "Restarting the test environment..."
     echo "$ docker-compose down --remove-orphans"
     docker-compose down --remove-orphans

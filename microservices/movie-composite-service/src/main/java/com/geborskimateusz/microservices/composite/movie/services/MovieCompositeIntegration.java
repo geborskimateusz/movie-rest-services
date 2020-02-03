@@ -37,6 +37,9 @@ import java.io.IOException;
 @Component
 public class MovieCompositeIntegration implements MovieService, RecommendationService, ReviewService {
 
+    public static final String MOVIE = "/movie";
+    public static final String RECOMMENDATION = "/recommendation";
+    public static final String REVIEW = "/review";
     private final WebClient webClient;
     private final ObjectMapper mapper;
 
@@ -65,9 +68,9 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
         this.messageSources = messageSources;
         this.mapper = mapper;
 
-        movieServiceUrl = "http://" + movieServiceHost + ":" + movieServicePort + "/movie";
-        recommendationServiceUrl = "http://" + recommendationServiceHost + ":" + recommendationServicePort + "/recommendation";
-        reviewServiceUrl = "http://" + reviewServiceHost + ":" + reviewServicePort + "/review";
+        movieServiceUrl = "http://" + movieServiceHost + ":" + movieServicePort;
+        recommendationServiceUrl = "http://" + recommendationServiceHost + ":" + recommendationServicePort;
+        reviewServiceUrl = "http://" + reviewServiceHost + ":" + reviewServicePort;
     }
 
     @Override
@@ -109,7 +112,7 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
     @Override
     public Mono<Movie> getMovie(Integer movieId) {
 
-        String url = movieServiceUrl + movieId;
+        String url = movieServiceUrl + MOVIE + "/" + movieId;
 
         log.debug("Will call getMovie API on URL: {}", url);
 
@@ -125,7 +128,7 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
     @Override
     public Flux<Recommendation> getRecommendations(int movieId) {
 
-        String url = recommendationServiceUrl + "?movieId=" + movieId;
+        String url = recommendationServiceUrl + RECOMMENDATION + "?movieId=" + movieId;
 
         log.debug("Will call the getRecommendations API on URL: {}", url);
 
@@ -139,7 +142,7 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
 
     @Override
     public Flux<Review> getReviews(int movieId) {
-        String url = reviewServiceUrl + "?movieId=" + movieId;
+        String url = reviewServiceUrl + REVIEW + "?movieId=" + movieId;
 
         log.debug("Will call the getReviews API on URL: {}", url);
 

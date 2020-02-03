@@ -49,14 +49,12 @@ logging:
     org.hibernate.SQL: DEBUG
     org.hibernate.type.descriptor.sql.BasicBinder: TRACE
 
+management.endpoint.health.show-details: "ALWAYS"
+management.endpoints.web.exposure.include: "*"
 management:
-  endpoint:
-    health:
-      show-details=always:
-  endpoints:
-    web:
-      exposure:
-        include: "*"
+  health:
+    defaults:
+      enabled=false:
 ---
 spring.profiles: docker
 
