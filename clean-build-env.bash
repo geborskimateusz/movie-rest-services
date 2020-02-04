@@ -9,3 +9,6 @@ docker rmi $(docker images | grep latest)
 
 echo "Building Maven project"
 mvn clean install
+
+echo "Build new image"
+docker-compose build
