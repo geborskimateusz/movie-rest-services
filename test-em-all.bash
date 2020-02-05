@@ -41,14 +41,14 @@ function assertEqual() {
     local expected=$1
     local actual=$2
 
-#    if [ "$actual" = "$expected" ]
-#    then
-#        echo "Test OK (actual value: $actual)"
-#        return 0
-#    else
-#        echo "Test FAILED, EXPECTED VALUE: $expected, ACTUAL VALUE: $actual, WILL ABORT"
-#        return 1
-#    fi
+    if [ "$actual" = "$expected" ]
+    then
+        echo "Test OK (actual value: $actual)"
+        return 0
+    else
+        echo "Test FAILED, EXPECTED VALUE: $expected, ACTUAL VALUE: $actual, WILL ABORT"
+        return 1
+    fi
 
         echo "Test OK (actual value: $actual)"
         return 0
@@ -252,10 +252,14 @@ setupData
 
 waitForMessageProcessing
 
-# Verify that a normal request works, expect three recommendations and three reviews
+## Verify that a normal request works, expect three recommendations and three reviews
 assertCurl 200 "curl http://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS -s"
+
+echo  "printing response"
+$(echo "$RESPONSE" | jq)
+
 assertEqual "$MOV_ID_REVS_RECS" $(echo $RESPONSE | jq .movieId)
-assertEqual 1 $(echo $RESPONSE | jq ".recommendations  | length")
+assertEqual 3 $(echo $RESPONSE | jq ".recommendations  | length")
 assertEqual 1 $(echo $RESPONSE | jq ".reviews | length")
 
 # Verify that a 404 (Not Found) error is returned for a non existing movieId ($MOV_ID_NOT_FOUND)
@@ -319,3 +323,6 @@ fi
 #    ], "reviews":[
 #        {"reviewId":4511,"author":"author 1","subject":"subject 1","content":"content 1"}
 #    ]}'
+
+
+docker-compose exec kafka /opt/kafka/bin/kafka-topics.sh --zookeeper zookeeper --list

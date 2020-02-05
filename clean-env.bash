@@ -7,8 +7,8 @@ docker rm $(docker ps -a -q)
 echo "Removing all latest images"
 docker rmi $(docker images | grep latest)
 
-echo "Building Maven project"
-mvn clean install
-
-echo "Build new image"
-docker-compose build
+#echo "Building Maven project"
+#mvn clean install
+#
+#echo "Build new image"
+#docker-compose build
