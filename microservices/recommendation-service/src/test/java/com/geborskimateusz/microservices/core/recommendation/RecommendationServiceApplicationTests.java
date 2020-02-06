@@ -23,7 +23,7 @@ import static org.assertj.core.api.Java6Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {"spring.data.mongodb.port: 0"})
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {"spring.data.mongodb.port: 0","eureka.client.enabled=false"})
 public class RecommendationServiceApplicationTests {
 
     @Autowired

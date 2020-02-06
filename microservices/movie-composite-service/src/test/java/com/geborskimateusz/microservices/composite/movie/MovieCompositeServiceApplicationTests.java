@@ -35,7 +35,7 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 import static reactor.core.publisher.Mono.just;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = RANDOM_PORT)
+@SpringBootTest(webEnvironment = RANDOM_PORT, properties = {"eureka.client.enabled=false"})
 public class MovieCompositeServiceApplicationTests {
 
     public static final String FAKE_ADDRESS = "Fake address";

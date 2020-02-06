@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {
-        "spring.datasource.url=jdbc:h2:mem:review-db"})
+        "spring.datasource.url=jdbc:h2:mem:review-db", "eureka.client.enabled=false"})
 public class ReviewServiceApplicationTests {
 
     @Autowired

@@ -299,7 +299,7 @@ fi
 #        {"reviewId":4711,"author":"author 2","subject":"subject 2","content":"content 2"},
 #        {"reviewId":7511,"author":"author 3","subject":"subject 3","content":"content 3"}
 #    ]}'
-
+#
 #    body=\
 #'{"movieId":333,"genre":"product 1","title":"lalalla", "recommendations":[
 #        {"recommendationId":321,"author":"author 1","rate":1,"content":"content 1"},
@@ -325,4 +325,4 @@ fi
 #    ]}'
 
 
-docker-compose exec kafka /opt/kafka/bin/kafka-topics.sh --zookeeper zookeeper --list
+#docker-compose exec kafka /opt/kafka/bin/kafka-topics.sh --zookeeper zookeeper --list
