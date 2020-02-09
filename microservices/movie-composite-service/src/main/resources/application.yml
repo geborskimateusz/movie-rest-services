@@ -60,16 +60,32 @@ api:
                 This means that a delete request of a non existing movie will return <b>200 Ok</b>.
 server.port: 7000
 
-app:
-  movie-service:
-    host: localhost
-    port: 7001
-  recommendation-service:
-    host: localhost
-    port: 7002
-  review-service:
-    host: localhost
-    port: 7003
+#app:
+#  movie-service:
+#    host: localhost
+#    port: 7001
+#  recommendation-service:
+#    host: localhost
+#    port: 7002
+#  review-service:
+#    host: localhost
+#    port: 7003
+
+spring.application.name: movie-composite
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+    initialInstanceInfoReplicationIntervalSeconds: 5
+    registryFetchIntervalSeconds: 5
+  instance:
+    leaseRenewalIntervalInSeconds: 5
+    leaseExpirationDurationInSeconds: 5
+
+ribbon.ServerListRefreshInterval: 5000
+
+ribbon.NFLoadBalancerPingInterval: 5
 
 spring.cloud.stream:
   defaultBinder: rabbit
@@ -114,17 +130,19 @@ spring.profiles: docker
 
 server.port: 8080
 
-app:
-  movie-service:
-    host: movie
-    port: 8080
-  recommendation-service:
-    host: recommendation
-    port: 8080
-  review-service:
-    host: review
-    port: 8080
+#app:
+#  movie-service:
+#    host: movie
+#    port: 8080
+#  recommendation-service:
+#    host: recommendation
+#    port: 8080
+#  review-service:
+#    host: review
+#    port: 8080
 
 spring.rabbitmq.host: rabbitmq
 
 spring.cloud.stream.kafka.binder.brokers: kafka
+
+eureka.client.serviceUrl.defaultZone: http://eureka:8761/eureka/

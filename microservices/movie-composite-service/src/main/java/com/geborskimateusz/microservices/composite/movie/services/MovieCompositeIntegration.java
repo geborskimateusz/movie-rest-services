@@ -25,6 +25,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
+import java.util.List;
 
 
 /**
@@ -37,40 +38,47 @@ import java.io.IOException;
 @Component
 public class MovieCompositeIntegration implements MovieService, RecommendationService, ReviewService {
 
-    public static final String MOVIE = "/movie";
-    public static final String RECOMMENDATION = "/recommendation";
-    public static final String REVIEW = "/review";
-    private final WebClient webClient;
+    private final String MOVIE_SERVICE_URL = "http://movie";
+    private static final String MOVIE = "/movie";
+
+    private final String REVIEW_SERVICE_URL = "http://review";
+    private static final String RECOMMENDATION = "/recommendation";
+
+    private final String RECOMMENDATION_SERVICE_URL = "http://recommendation";
+    private static final String REVIEW = "/review";
+
+    private final WebClient.Builder webClientBuilder;
+    private WebClient webClient;
     private final ObjectMapper mapper;
 
-    private final String movieServiceUrl;
-    private final String recommendationServiceUrl;
-    private final String reviewServiceUrl;
+//    private final String movieServiceUrl;
+//    private final String recommendationServiceUrl;
+//    private final String reviewServiceUrl;
 
     private final MessageSources messageSources;
 
     @Autowired
     public MovieCompositeIntegration(
-            WebClient.Builder webClient,
+            WebClient.Builder webClientBuilder,
             MessageSources messageSources,
-            ObjectMapper mapper,
+            ObjectMapper mapper
 
-            @Value("${app.movie-service.host}") String movieServiceHost,
-            @Value("${app.movie-service.port}") int movieServicePort,
-
-            @Value("${app.recommendation-service.host}") String recommendationServiceHost,
-            @Value("${app.recommendation-service.port}") int recommendationServicePort,
-
-            @Value("${app.review-service.host}") String reviewServiceHost,
-            @Value("${app.review-service.port}") int reviewServicePort
+//            @Value("${app.movie-service.host}") String movieServiceHost,
+//            @Value("${app.movie-service.port}") int movieServicePort,
+//
+//            @Value("${app.recommendation-service.host}") String recommendationServiceHost,
+//            @Value("${app.recommendation-service.port}") int recommendationServicePort,
+//
+//            @Value("${app.review-service.host}") String reviewServiceHost,
+//            @Value("${app.review-service.port}") int reviewServicePort
     ) {
-        this.webClient = webClient.build();
+        this.webClientBuilder = webClientBuilder;
         this.messageSources = messageSources;
         this.mapper = mapper;
 
-        movieServiceUrl = "http://" + movieServiceHost + ":" + movieServicePort;
-        recommendationServiceUrl = "http://" + recommendationServiceHost + ":" + recommendationServicePort;
-        reviewServiceUrl = "http://" + reviewServiceHost + ":" + reviewServicePort;
+//        movieServiceUrl = "http://" + movieServiceHost + ":" + movieServicePort;
+//        recommendationServiceUrl = "http://" + recommendationServiceHost + ":" + recommendationServicePort;
+//        reviewServiceUrl = "http://" + reviewServiceHost + ":" + reviewServicePort;
     }
 
     @Override
@@ -112,11 +120,11 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
     @Override
     public Mono<Movie> getMovie(Integer movieId) {
 
-        String url = movieServiceUrl + MOVIE + "/" + movieId;
+        String url = MOVIE_SERVICE_URL + MOVIE + "/" + movieId;
 
         log.debug("Will call getMovie API on URL: {}", url);
 
-        return webClient
+        return getWebClient()
                 .get().uri(url)
                 .retrieve()
                 .bodyToMono(Movie.class)
@@ -128,11 +136,11 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
     @Override
     public Flux<Recommendation> getRecommendations(int movieId) {
 
-        String url = recommendationServiceUrl + RECOMMENDATION + "?movieId=" + movieId;
+        String url = RECOMMENDATION_SERVICE_URL + RECOMMENDATION + "?movieId=" + movieId;
 
         log.debug("Will call the getRecommendations API on URL: {}", url);
 
-        return webClient.get()
+        return getWebClient().get()
                 .uri(url)
                 .retrieve()
                 .bodyToFlux(Recommendation.class)
@@ -142,11 +150,11 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
 
     @Override
     public Flux<Review> getReviews(int movieId) {
-        String url = reviewServiceUrl + REVIEW + "?movieId=" + movieId;
+        String url = REVIEW_SERVICE_URL + REVIEW + "?movieId=" + movieId;
 
         log.debug("Will call the getReviews API on URL: {}", url);
 
-        return webClient.get()
+        return getWebClient().get()
                 .uri(url)
                 .retrieve()
                 .bodyToFlux(Review.class)
@@ -177,24 +185,32 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
     }
 
     public Mono<Health> getMovieHealth() {
-        return getHealth(movieServiceUrl);
+        return getHealth(MOVIE_SERVICE_URL);
     }
 
     public Mono<Health> getRecommendationHealth() {
-        return getHealth(recommendationServiceUrl);
+        return getHealth(RECOMMENDATION_SERVICE_URL);
     }
 
     public Mono<Health> getReviewHealth() {
-        return getHealth(reviewServiceUrl);
+        return getHealth(REVIEW_SERVICE_URL);
     }
 
     private Mono<Health> getHealth(String url) {
         url += "/actuator/health";
         log.info("Will call the Health API on URL: {}", url);
-        return webClient.get().uri(url).retrieve().bodyToMono(String.class)
+        return getWebClient().get().uri(url).retrieve().bodyToMono(String.class)
                 .map(s -> new Health.Builder().up().build())
                 .onErrorResume(ex -> Mono.just(new Health.Builder().down(ex).build()))
                 .log();
+    }
+
+    private WebClient getWebClient() {
+        if (webClient == null) {
+            webClient = webClientBuilder.build();
+        }
+
+        return webClient;
     }
 
 
