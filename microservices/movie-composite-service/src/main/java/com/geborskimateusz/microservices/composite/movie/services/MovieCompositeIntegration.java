@@ -14,7 +14,6 @@ import com.geborskimateusz.util.exceptions.NotFoundException;
 import com.geborskimateusz.util.http.HttpErrorInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.messaging.support.MessageBuilder;
@@ -25,13 +24,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
-import java.util.List;
 
-
-/**
- * ParameterizedTypeReference is used here , because of List<T>.
- * RestTemplate can figure out what class to map the JSON responses to.
- **/
 
 @Slf4j
 @EnableBinding(MessageSources.class)
@@ -41,10 +34,10 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
     private final String MOVIE_SERVICE_URL = "http://movie";
     private static final String MOVIE = "/movie";
 
-    private final String REVIEW_SERVICE_URL = "http://review";
+    private final String RECOMMENDATION_SERVICE_URL = "http://recommendation";
     private static final String RECOMMENDATION = "/recommendation";
 
-    private final String RECOMMENDATION_SERVICE_URL = "http://recommendation";
+    private final String REVIEW_SERVICE_URL = "http://review";
     private static final String REVIEW = "/review";
 
     private final WebClient.Builder webClientBuilder;

@@ -19,7 +19,7 @@ public class MovieCompositeServiceApplication {
 
     @Bean
     @LoadBalanced
-    public WebClient.Builder loadBalanacedWebClientBuilder() {
+    public WebClient.Builder loadBalancedWebClientBuilder() {
         return WebClient.builder();
     }
 
