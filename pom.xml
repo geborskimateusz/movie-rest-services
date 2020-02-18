@@ -9,6 +9,7 @@
         <module>microservices/recommendation-service</module>
         <module>microservices/review-service</module>
 		<module>spring-cloud/eureka-server</module>
+		<module>spring-cloud/gateway</module>
 	</modules>
     <parent>
 		<groupId>org.springframework.boot</groupId>

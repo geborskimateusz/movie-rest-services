@@ -44,10 +44,6 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
     private WebClient webClient;
     private final ObjectMapper mapper;
 
-//    private final String movieServiceUrl;
-//    private final String recommendationServiceUrl;
-//    private final String reviewServiceUrl;
-
     private final MessageSources messageSources;
 
     @Autowired
@@ -55,23 +51,10 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
             WebClient.Builder webClientBuilder,
             MessageSources messageSources,
             ObjectMapper mapper
-
-//            @Value("${app.movie-service.host}") String movieServiceHost,
-//            @Value("${app.movie-service.port}") int movieServicePort,
-//
-//            @Value("${app.recommendation-service.host}") String recommendationServiceHost,
-//            @Value("${app.recommendation-service.port}") int recommendationServicePort,
-//
-//            @Value("${app.review-service.host}") String reviewServiceHost,
-//            @Value("${app.review-service.port}") int reviewServicePort
     ) {
         this.webClientBuilder = webClientBuilder;
         this.messageSources = messageSources;
         this.mapper = mapper;
-
-//        movieServiceUrl = "http://" + movieServiceHost + ":" + movieServicePort;
-//        recommendationServiceUrl = "http://" + recommendationServiceHost + ":" + recommendationServicePort;
-//        reviewServiceUrl = "http://" + reviewServiceHost + ":" + reviewServicePort;
     }
 
     @Override
@@ -175,27 +158,6 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
         messageSources.outputReviews()
                 .send(MessageBuilder.withPayload(
                         new Event<>(Event.Type.DELETE, movieId, null)).build());
-    }
-
-    public Mono<Health> getMovieHealth() {
-        return getHealth(MOVIE_SERVICE_URL);
-    }
-
-    public Mono<Health> getRecommendationHealth() {
-        return getHealth(RECOMMENDATION_SERVICE_URL);
-    }
-
-    public Mono<Health> getReviewHealth() {
-        return getHealth(REVIEW_SERVICE_URL);
-    }
-
-    private Mono<Health> getHealth(String url) {
-        url += "/actuator/health";
-        log.info("Will call the Health API on URL: {}", url);
-        return getWebClient().get().uri(url).retrieve().bodyToMono(String.class)
-                .map(s -> new Health.Builder().up().build())
-                .onErrorResume(ex -> Mono.just(new Health.Builder().down(ex).build()))
-                .log();
     }
 
     private WebClient getWebClient() {

@@ -36,10 +36,10 @@ services:
         condition: service_healthy
 
   movie-composite:
-    build: microservices/movie-composite-service
+#    build: microservices/movie-composite-service
     mem_limit: 350m
-    ports:
-      - "8080:8080"
+#    ports:
+#      - "8080:8080"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
@@ -47,10 +47,10 @@ services:
         condition: service_healthy
 
   eureka:
-    build: spring-cloud/eureka-server
+#    build: spring-cloud/eureka-server
     mem_limit: 350m
-    ports:
-      - "8761:8761"
+#    ports:
+#      - "8761:8761"
 
   # $ mongo
   mongodb:
