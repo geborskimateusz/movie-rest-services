@@ -12,7 +12,6 @@ services:
       rabbitmq:
         condition: service_healthy
 
-
   recommendation:
     build: microservices/recommendation-service
     mem_limit: 350m
@@ -54,7 +53,7 @@ services:
     build: spring-cloud/gateway
     mem_limit: 350m
     ports:
-      - "8080:8080"
+      - "8443:8443"
 
   auth-server:
     environment:
@@ -71,7 +70,7 @@ services:
     command: mongod --smallfiles
     healthcheck:
       test: "mongo --eval 'db.stats().ok'"
-      interval: 10s
+      interval: 20s
       timeout: 5s
       retries: 10
 
@@ -88,7 +87,7 @@ services:
       - MYSQL_PASSWORD=pwd
     healthcheck:
       test: "/usr/bin/mysql --user=user --password=pwd --execute \"SHOW DATABASES;\""
-      interval: 10s
+      interval: 20s
       timeout: 5s
       retries: 10
 
@@ -100,6 +99,6 @@ services:
       - 15672:15672
     healthcheck:
       test: ["CMD", "rabbitmqctl", "status"]
-      interval: 10s
+      interval: 20s
       timeout: 5s
       retries: 10
