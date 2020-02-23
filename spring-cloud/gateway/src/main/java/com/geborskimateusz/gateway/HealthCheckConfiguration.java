@@ -13,6 +13,7 @@ import java.util.LinkedHashMap;
 @Configuration
 public class HealthCheckConfiguration {
 
+    private final String AUTH_SERVICE_URL = "http://auth-server";
     private final String MOVIE_SERVICE_URL = "http://movie";
     private final String RECOMMENDATION_SERVICE_URL = "http://recommendation";
     private final String REVIEW_SERVICE_URL = "http://review";
@@ -31,12 +32,17 @@ public class HealthCheckConfiguration {
         ReactiveHealthIndicatorRegistry registry = new
                 DefaultReactiveHealthIndicatorRegistry(new LinkedHashMap<>());
 
+        registry.register("auth-server", this::getAuthHealth);
         registry.register("movie", this::getMovieHealth);
         registry.register("recommendations", this::getRecommendationHealth);
         registry.register("reviews", this::getReviewHealth);
         registry.register("movie-composite", this::getMovieHealth);
 
         return new CompositeReactiveHealthIndicator(healthAggregator, registry);
+    }
+
+    public Mono<Health> getAuthHealth() {
+        return getHealth(AUTH_SERVICE_URL);
     }
 
     public Mono<Health> getMovieHealth() {
