@@ -37,27 +37,29 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
     @Override
     public void configure(ClientDetailsServiceConfigurer clients) throws Exception {
 
+        // @formatter:off
         clients.inMemory()
-                .withClient("reader")
-                .authorizedGrantTypes("code", "authorization_code", "implicit", "password")
-                .redirectUris("http://my.redirect.uri")
-                .secret("{noop}secret")
-                .scopes("movie:read")
-                .accessTokenValiditySeconds(600_000_000)
+                        .withClient("reader")
+                        .authorizedGrantTypes("code", "authorization_code", "implicit", "password")
+                        .redirectUris("http://my.redirect.uri")
+                        .secret("{noop}secret")
+                        .scopes("movie:read")
+                        .accessTokenValiditySeconds(600_000_000)
                 .and()
-                .withClient("writer")
-                .authorizedGrantTypes("code", "authorization_code", "implicit", "password")
-                .redirectUris("http://my.redirect.uri")
-                .secret("{noop}secret")
-                .scopes("movie:read", "movie:write")
-                .accessTokenValiditySeconds(600_000_000)
+                        .withClient("writer")
+                        .authorizedGrantTypes("code", "authorization_code", "implicit", "password")
+                        .redirectUris("http://my.redirect.uri")
+                        .secret("{noop}secret")
+                        .scopes("movie:read", "movie:write")
+                        .accessTokenValiditySeconds(600_000_000)
                 .and()
-                .withClient("noscopes")
-                .authorizedGrantTypes("code", "authorization_code", "implicit", "password")
-                .redirectUris("http://my.redirect.uri")
-                .secret("{noop}secret")
-                .scopes("none")
-                .accessTokenValiditySeconds(600_000_000);
+                        .withClient("noscopes")
+                        .authorizedGrantTypes("code", "authorization_code", "implicit", "password")
+                        .redirectUris("http://my.redirect.uri")
+                        .secret("{noop}secret")
+                        .scopes("none")
+                        .accessTokenValiditySeconds(600_000_000);
+        // @formatter:on
     }
 
     @Override
