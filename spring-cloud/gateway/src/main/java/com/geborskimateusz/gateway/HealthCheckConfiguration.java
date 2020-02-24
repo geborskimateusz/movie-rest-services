@@ -17,10 +17,11 @@ public class HealthCheckConfiguration {
     private final String MOVIE_SERVICE_URL = "http://movie";
     private final String RECOMMENDATION_SERVICE_URL = "http://recommendation";
     private final String REVIEW_SERVICE_URL = "http://review";
+    private final String MOVIE_COMPOSITE_SERVICE_URL = "http://movie-composite";
 
     private HealthAggregator healthAggregator;
     private final WebClient.Builder webClientBuilder;
-    private  WebClient webClient;
+    private WebClient webClient;
 
     public HealthCheckConfiguration(HealthAggregator healthAggregator, WebClient.Builder webClientBuilder) {
         this.healthAggregator = healthAggregator;
@@ -36,9 +37,13 @@ public class HealthCheckConfiguration {
         registry.register("movie", this::getMovieHealth);
         registry.register("recommendations", this::getRecommendationHealth);
         registry.register("reviews", this::getReviewHealth);
-        registry.register("movie-composite", this::getMovieHealth);
+        registry.register("movie-composite", this::getMovieCompositeHealth);
 
         return new CompositeReactiveHealthIndicator(healthAggregator, registry);
+    }
+
+    private Mono<Health> getMovieCompositeHealth() {
+        return getHealth(MOVIE_SERVICE_URL);
     }
 
     public Mono<Health> getAuthHealth() {
