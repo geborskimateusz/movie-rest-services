@@ -5,7 +5,7 @@
 #   HOST=localhost PORT=7000 ./test-em-all.bash
 #
 : ${HOST=localhost}
-: ${PORT=8080}
+: ${PORT=8443}
 : ${MOV_ID_REVS_RECS=2}
 : ${MOV_ID_NOT_FOUND=14}
 : ${MOV_ID_NO_RECS=114}
@@ -49,9 +49,6 @@ function assertEqual() {
         echo "Test FAILED, EXPECTED VALUE: $expected, ACTUAL VALUE: $actual, WILL ABORT"
         return 1
     fi
-
-        echo "Test OK (actual value: $actual)"
-        return 0
 }
 
 function testUrl() {
@@ -76,16 +73,17 @@ function waitForService() {
             echo " Give up"
             exit 1
         else
-            sleep 6
+            sleep 3
             echo -n ", retry #$n "
         fi
     done
+    echo "DONE, continues..."
 }
 
 function testCompositeCreated() {
 
-    # Expect that the Movie Composite for movieId $MOV_ID_REVS_RECS has been created with three recommendations and three reviews
-    if ! assertCurl 200 "curl http://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS -s"
+    # Expect that the Movie Composite for productId $MOV_ID_REVS_RECS has been created with three recommendations and three reviews
+    if ! assertCurl 200 "curl $AUTH -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS -s"
     then
         echo -n "FAIL"
         return 1
@@ -119,7 +117,7 @@ function waitForMessageProcessing() {
             echo " Give up"
             exit 1
         else
-            sleep 6
+            sleep 3
             echo -n ", retry #$n "
         fi
     done
@@ -130,8 +128,8 @@ function recreateComposite() {
   local movieId=$1
   local composite=$2
 
-    assertCurl 200 "curl -X DELETE http://$HOST:$PORT/movie-composite/${movieId} -s"
-    curl -X POST http://$HOST:$PORT/movie-composite -H "Content-Type: application/json" --data "$composite"
+    assertCurl 200 "curl $AUTH -X DELETE -k https://$HOST:$PORT/movie-composite/${movieId} -s"
+    curl -X POST -k https://$HOST:$PORT/movie-composite -H "Content-Type: application/json" -H "Authorization: Bearer $ACCESS_TOKEN" --data "$composite"
 }
 
 function setupData() {
@@ -246,14 +244,17 @@ then
     docker-compose up -d
 fi
 
-waitForService curl http://$HOST:$PORT/actuator/health
+waitForService curl -k https://$HOST:$PORT/actuator/health
+
+ACCESS_TOKEN=$(curl -k https://writer:secret@$HOST:$PORT/oauth/token -d grant_type=password -d username=u -d password=p -s | jq .access_token -r)
+AUTH="-H \"Authorization: Bearer $ACCESS_TOKEN\""
 
 setupData
 
 waitForMessageProcessing
 
 ## Verify that a normal request works, expect three recommendations and three reviews
-assertCurl 200 "curl http://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS -s"
+assertCurl 200 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS $AUTH -s"
 
 echo  "printing response"
 $(echo "$RESPONSE" | jq)
@@ -263,16 +264,16 @@ assertEqual 3 $(echo $RESPONSE | jq ".recommendations  | length")
 assertEqual 1 $(echo $RESPONSE | jq ".reviews | length")
 
 # Verify that a 404 (Not Found) error is returned for a non existing movieId ($MOV_ID_NOT_FOUND)
-assertCurl 404 "curl http://$HOST:$PORT/movie-composite/$MOV_ID_NOT_FOUND -s"
+assertCurl 404 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_NOT_FOUND $AUTH -s"
 
 # Verify that no recommendations are returned for movieId $MOV_ID_NO_RECS
-assertCurl 200 "curl http://$HOST:$PORT/movie-composite/$MOV_ID_NO_RECS -s"
+assertCurl 200 "curl -k http://$HOST:$PORT/movie-composite/$MOV_ID_NO_RECS $AUTH -s"
 assertEqual "$MOV_ID_NO_RECS" $(echo $RESPONSE | jq .movieId)
 assertEqual 0 $(echo $RESPONSE | jq ".recommendations | length")
 assertEqual 3 $(echo $RESPONSE | jq ".reviews | length")
 
 # Verify that no reviews are returned for movieId $MOV_ID_NO_REVS
-assertCurl 200 "curl http://$HOST:$PORT/movie-composite/$MOV_ID_NO_REVS -s"
+assertCurl 200 "curl -k http://$HOST:$PORT/movie-composite/$MOV_ID_NO_REVS $AUTH -s"
 assertEqual $MOV_ID_NO_REVS $(echo $RESPONSE | jq .movieId)
 assertEqual 3 $(echo $RESPONSE | jq ".recommendations | length")
 assertEqual 0 $(echo $RESPONSE | jq ".reviews | length")
