@@ -4,6 +4,7 @@ import com.geborskimateusz.authorizationserver.config.utils.SubjectAttributeUser
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.oauth2.config.annotation.configurers.ClientDetailsServiceConfigurer;
 import org.springframework.security.oauth2.config.annotation.web.configuration.AuthorizationServerConfigurerAdapter;
 import org.springframework.security.oauth2.config.annotation.web.configuration.EnableAuthorizationServer;
@@ -26,10 +27,10 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
     boolean jwtEnabled;
 
     public AuthorizationServerConfiguration(
-            AuthenticationManager authenticationManager,
+            AuthenticationConfiguration authenticationConfiguration,
             KeyPair keyPair,
-            @Value("security.oauth2.authorizationserver.jwt.enabled:true") boolean jwtEnabled) {
-        this.authenticationManager = authenticationManager;
+            @Value("${security.oauth2.authorizationserver.jwt.enabled:true}") boolean jwtEnabled) throws Exception {
+        this.authenticationManager = authenticationConfiguration.getAuthenticationManager();
         this.keyPair = keyPair;
         this.jwtEnabled = jwtEnabled;
     }
@@ -73,14 +74,14 @@ public class AuthorizationServerConfiguration extends AuthorizationServerConfigu
     }
 
     @Bean
-    private TokenStore tokenStore() {
+    public TokenStore tokenStore() {
         return this.jwtEnabled ?
                 new JwtTokenStore(accessTokenConverter())
                 : new InMemoryTokenStore();
     }
 
     @Bean
-    private JwtAccessTokenConverter accessTokenConverter() {
+    public JwtAccessTokenConverter accessTokenConverter() {
         JwtAccessTokenConverter converter = new JwtAccessTokenConverter();
         converter.setKeyPair(this.keyPair);
 
