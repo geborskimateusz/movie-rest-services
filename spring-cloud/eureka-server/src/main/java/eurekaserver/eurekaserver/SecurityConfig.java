@@ -1,5 +1,6 @@
 package eurekaserver.eurekaserver;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -13,9 +14,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private final String username;
     private final String password;
 
-    public SecurityConfig
-            (@Value("${app.eureka-username}") String username,
-             @Value("${app.eureka-password}") String password) {
+    @Autowired
+    public SecurityConfig(
+        @Value("${app.eureka-username}") String username,
+        @Value("${app.eureka-password}") String password
+    ) {
         this.username = username;
         this.password = password;
     }
