@@ -9,14 +9,22 @@ import com.geborskimateusz.microservices.composite.movie.services.utils.Composit
 import com.geborskimateusz.util.http.ServiceUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextImpl;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
+import java.net.URL;
 import java.util.List;
 
 @Slf4j
 @RestController
 public class BaseMovieCompositeService implements MovieCompositeService {
+
+    private final SecurityContext nullSC = new SecurityContextImpl();
 
     private final MovieCompositeIntegration movieCompositeIntegration;
     private final ServiceUtil serviceUtil;
@@ -38,17 +46,26 @@ public class BaseMovieCompositeService implements MovieCompositeService {
                                 (List<Recommendation>) values[1],
                                 (List<Review>) values[2],
                                 serviceUtil.getServiceAddress()),
+                        ReactiveSecurityContextHolder.getContext().defaultIfEmpty(nullSC),
                         movieCompositeIntegration.getMovie(movieId),
                         movieCompositeIntegration.getRecommendations(movieId).collectList(),
                         movieCompositeIntegration.getReviews(movieId).collectList()
-                ).doOnError(ex -> log.warn("getCompositeMovie failed: {}", ex.toString()))
-                        .log();
+                ).doOnError(ex -> log.warn("getCompositeMovie failed: {}", ex.toString())).log();
 
     }
 
     @Override
-    public void createCompositeMovie(MovieAggregate body) {
+    public Mono<Void> createCompositeMovie(MovieAggregate body) {
+        return ReactiveSecurityContextHolder.getContext()
+                .doOnSuccess(securityContext -> internalCreateCompositeMovie(securityContext, body))
+                .then();
+    }
+
+    private void internalCreateCompositeMovie(SecurityContext securityContext, MovieAggregate body) {
+
         try {
+
+            logAuthorizationInfo(securityContext);
 
             log.info("createCompositeMovie: Trying to create new Movie Entity for movieId: {} ", body.getMovieId());
             log.info(body.toString());
@@ -64,15 +81,30 @@ public class BaseMovieCompositeService implements MovieCompositeService {
     }
 
     @Override
-    public void deleteCompositeMovie(int movieId) {
-        log.debug("deleteCompositeMovie will delete Movie, Reviews, Recommendations belonging to Movie with id: {}", movieId);
+    public Mono<Void> deleteCompositeMovie(int movieId) {
 
-        movieCompositeIntegration.deleteMovie(movieId);
-        movieCompositeIntegration.deleteReviews(movieId);
-        movieCompositeIntegration.deleteRecommendations(movieId);
+        return ReactiveSecurityContextHolder.getContext()
+                .doOnSuccess(securityContext -> internalDeleteCompositeMovie(securityContext, movieId))
+                .then();
 
-        log.debug("deleteCompositeMovie deleted Movie, Reviews, Recommendations belonging to Movie with id: {}", movieId);
+    }
 
+    private void internalDeleteCompositeMovie(SecurityContext securityContext, int movieId) {
+
+        logAuthorizationInfo(securityContext);
+
+        try {
+            log.debug("deleteCompositeMovie will delete Movie, Reviews, Recommendations belonging to Movie with id: {}", movieId);
+
+            movieCompositeIntegration.deleteMovie(movieId);
+            movieCompositeIntegration.deleteReviews(movieId);
+            movieCompositeIntegration.deleteRecommendations(movieId);
+
+            log.debug("deleteCompositeMovie deleted Movie, Reviews, Recommendations belonging to Movie with id: {}", movieId);
+        } catch (RuntimeException ex) {
+            log.warn("deleteCompositeMovie failed: {}", ex.toString());
+            throw ex;
+        }
     }
 
 
@@ -126,5 +158,38 @@ public class BaseMovieCompositeService implements MovieCompositeService {
 
         log.debug("createMovieFromBody, movieId: {}", movie.getMovieId());
         movieCompositeIntegration.createMovie(movie);
+    }
+
+    private void logAuthorizationInfo(SecurityContext securityContext) {
+
+        if (
+            //@formatter:off
+                securityContext != null &&
+                securityContext.getAuthentication() != null &&
+                securityContext.getAuthentication() instanceof JwtAuthenticationToken
+            //@formatter:on
+        ) {
+            Jwt jwt = ((JwtAuthenticationToken) securityContext.getAuthentication()).getToken();
+            logAuthorizationInfo(jwt);
+        } else {
+            log.warn("No JWT token supplied.");
+        }
+
+    }
+
+    private void logAuthorizationInfo(Jwt jwt) {
+        if (jwt == null) {
+            log.warn("No JWT token supplied.");
+        } else {
+            if (log.isDebugEnabled()) {
+                URL issuer = jwt.getIssuer();
+                List<String> audience = jwt.getAudience();
+                Object subject = jwt.getClaims().get("sub");
+                Object scopes = jwt.getClaims().get("scope");
+                Object expires = jwt.getClaims().get("exp");
+
+                log.debug("Authorization info: Subject: {}, scopes: {}, expires {}: issuer: {}, audience: {}", subject, scopes, expires, issuer, audience);
+            }
+        }
     }
 }

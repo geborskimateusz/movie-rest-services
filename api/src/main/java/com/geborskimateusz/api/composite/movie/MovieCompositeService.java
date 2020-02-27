@@ -51,7 +51,7 @@ public interface MovieCompositeService {
     @PostMapping(
             value = "/movie-composite",
             produces = "application/json")
-    void createCompositeMovie(@RequestBody MovieAggregate body);
+    Mono<Void> createCompositeMovie(@RequestBody MovieAggregate body);
 
 
     /**
@@ -69,5 +69,5 @@ public interface MovieCompositeService {
     @DeleteMapping(
             value = "/movie-composite/{movieId}",
             produces = "application/json")
-    void deleteCompositeMovie(@PathVariable int movieId);
+    Mono<Void> deleteCompositeMovie(@PathVariable int movieId);
 }
