@@ -10,7 +10,7 @@ import org.springframework.security.web.server.SecurityWebFilterChain;
  * integration tests.
  */
 @TestConfiguration
-public class SecurityConfig {
+public class TestSecurityConfig {
 
     @Bean
     public SecurityWebFilterChain securityWebFilterChain(ServerHttpSecurity httpSecurity){

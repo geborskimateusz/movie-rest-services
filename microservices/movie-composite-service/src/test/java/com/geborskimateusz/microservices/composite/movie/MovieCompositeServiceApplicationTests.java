@@ -35,7 +35,10 @@ import static org.springframework.boot.test.context.SpringBootTest.WebEnvironmen
 import static reactor.core.publisher.Mono.just;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = RANDOM_PORT, properties = {"eureka.client.enabled=false"})
+@SpringBootTest(
+        webEnvironment = RANDOM_PORT,
+        classes = {TestSecurityConfig.class},
+        properties = {"eureka.client.enabled=false"})
 public class MovieCompositeServiceApplicationTests {
 
     public static final String FAKE_ADDRESS = "Fake address";
@@ -101,16 +104,16 @@ public class MovieCompositeServiceApplicationTests {
 
         getAndVerifyMovie(given, HttpStatus.NOT_FOUND)
                 .jsonPath("$.path").isEqualTo("/movie-composite/" + given);
-	}
+    }
 
     @Test
     void getMovieByIdThrowsInvalidInputException() {
-		int given = 0;
+        int given = 0;
 
-		Mockito.when(movieCompositeIntegration.getMovie(given)).thenThrow(InvalidInputException.class);
+        Mockito.when(movieCompositeIntegration.getMovie(given)).thenThrow(InvalidInputException.class);
 
-		getAndVerifyMovie(given, HttpStatus.UNPROCESSABLE_ENTITY)
-				.jsonPath("$.path").isEqualTo("/movie-composite/" + given);
+        getAndVerifyMovie(given, HttpStatus.UNPROCESSABLE_ENTITY)
+                .jsonPath("$.path").isEqualTo("/movie-composite/" + given);
     }
 
     @Test
@@ -156,7 +159,7 @@ public class MovieCompositeServiceApplicationTests {
     }
 
     private void deleteAndVerify(int movieId, HttpStatus httpStatus) {
-         webTestClient.delete()
+        webTestClient.delete()
                 .uri("/movie-composite/" + movieId)
                 .exchange()
                 .expectStatus().isEqualTo(httpStatus);

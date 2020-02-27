@@ -278,6 +278,13 @@ assertEqual $MOV_ID_NO_REVS $(echo $RESPONSE | jq .movieId)
 assertEqual 3 $(echo $RESPONSE | jq ".recommendations | length")
 assertEqual 0 $(echo $RESPONSE | jq ".reviews | length")
 
+# verify roles and permissions
+READER_ACCESS_TOKEN=$(curl -k https://reader:secret@$HOST:$PORT/oauth/token -d grant_type=password -d username=u -d password=p -s | jq .access_token -r)
+READER_AUTH="-H \"Authorization: Bearer $READER_ACCESS_TOKEN\""
+
+assertCurl 200 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS $READER_AUTH -s"
+assertCurl 403 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS $READER_AUTH DELETE -s"
+
 echo "End, all tests OK:" `date`
 
 if [[ $@ == *"stop"* ]]
