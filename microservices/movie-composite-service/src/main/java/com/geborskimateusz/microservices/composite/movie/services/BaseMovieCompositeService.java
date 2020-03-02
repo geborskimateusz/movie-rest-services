@@ -42,9 +42,9 @@ public class BaseMovieCompositeService implements MovieCompositeService {
         return
                 Mono.zip(
                         values -> CompositeAggregator.createMovieAggregate(
-                                (Movie) values[0],
-                                (List<Recommendation>) values[1],
-                                (List<Review>) values[2],
+                                (Movie) values[1],
+                                (List<Recommendation>) values[2],
+                                (List<Review>) values[3],
                                 serviceUtil.getServiceAddress()),
                         ReactiveSecurityContextHolder.getContext().defaultIfEmpty(nullSC),
                         movieCompositeIntegration.getMovie(movieId),

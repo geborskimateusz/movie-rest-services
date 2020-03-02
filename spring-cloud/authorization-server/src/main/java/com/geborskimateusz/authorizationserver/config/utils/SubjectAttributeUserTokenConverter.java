@@ -20,7 +20,7 @@ public class SubjectAttributeUserTokenConverter extends DefaultUserAuthenticatio
         response.put("sub", authentication.getName());
 
         if (authentication.getAuthorities() != null && !authentication.getAuthorities().isEmpty()) {
-            response.put("AUTHORITIES", AuthorityUtils.authorityListToSet(authentication.getAuthorities()));
+            response.put(AUTHORITIES, AuthorityUtils.authorityListToSet(authentication.getAuthorities()));
         }
 
         return response;

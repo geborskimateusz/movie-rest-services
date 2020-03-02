@@ -6,6 +6,7 @@ import org.springframework.security.oauth2.provider.endpoint.FrameworkEndpoint;
 import org.springframework.security.oauth2.provider.token.TokenStore;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,6 +21,7 @@ public class IntrospectEndpoint {
     }
 
     @PostMapping("/introspect")
+    @ResponseBody
     public Map<String, Object> introspect(@RequestParam("token") String token) {
         OAuth2AccessToken accessToken = this.tokenStore.readAccessToken(token);
         Map<String, Object> attributes = new HashMap<>();
