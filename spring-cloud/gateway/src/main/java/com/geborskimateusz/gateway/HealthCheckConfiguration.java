@@ -43,7 +43,7 @@ public class HealthCheckConfiguration {
     }
 
     private Mono<Health> getMovieCompositeHealth() {
-        return getHealth(MOVIE_SERVICE_URL);
+        return getHealth(MOVIE_COMPOSITE_SERVICE_URL);
     }
 
     public Mono<Health> getAuthHealth() {
