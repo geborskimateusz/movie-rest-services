@@ -1,6 +1,10 @@
 set -eu
 set -x
 
+#get roles ex. "movie:read movie:write"
+SCOPE=$@
+
+#read credentials from external file
 read  DOMAIN_NAME   \
       USER_EMAIL    \
       USER_PASSWORD \
@@ -14,7 +18,7 @@ data() {
   "username":      $username,
   "password":      $password,
   "audience":      "https://localhost:8443/movie-composite",
-  "scope":         "openid email movie:read movie:write",
+  "scope":         "openid email '$SCOPE'",
   "client_id":     $client_id,
   "client_secret": $client_secret
 }'
