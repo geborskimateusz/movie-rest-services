@@ -1,14 +1,13 @@
 set -eu
 set -x
 
-DOMAIN_NAME=$@
-USER_EMAIL=$@
-USER_PASSWORD=$@
-CLIENT_ID=$@
-CLIENT_SECRET=$@
+read  DOMAIN_NAME   \
+      USER_EMAIL    \
+      USER_PASSWORD \
+      CLIENT_ID     \
+      CLIENT_SECRET < <(../../Documents/creds.bash)
 
-data()
-{
+data() {
   local template='
 {
   "grant_type":    "password",
@@ -21,12 +20,11 @@ data()
 }'
 
   if jq <<<null -c \
-        --arg username      "${USER_EMAIL}" \
-        --arg password      "${USER_PASSWORD}" \
-        --arg client_id     "${CLIENT_ID}" \
-        --arg client_secret "${CLIENT_SECRET}" \
-        "$template"
-  then
+    --arg username "${USER_EMAIL}" \
+    --arg password "${USER_PASSWORD}" \
+    --arg client_id "${CLIENT_ID}" \
+    --arg client_secret "${CLIENT_SECRET}" \
+    "$template"; then
     return
   else
     printf "ERROR: Can not format request data." >&2
@@ -34,14 +32,12 @@ data()
   fi
 }
 
-post()
-{
+post() {
   if curl --request POST \
-          --url     "https://${DOMAIN_NAME}/oauth/token" \
-          --header  'content-type: application/json' \
-          --data    "$1" \
-          -s
-  then
+    --url "https://${DOMAIN_NAME}/oauth/token" \
+    --header 'content-type: application/json' \
+    --data "$1" \
+    -s; then
     return
   else
     printf "ERROR: Can not send post request." >&2
@@ -49,10 +45,8 @@ post()
   fi
 }
 
-token()
-{
-  if jq -r .access_token
-  then
+token() {
+  if jq -r .access_token; then
     return
   else
     printf "ERROR: Can not parse JSON response." >&2
@@ -65,5 +59,3 @@ TOKEN="$(post "$(data)" | token)"
 AUTH="-H \"Authorization: Bearer $TOKEN\""
 
 echo $AUTH
-
-
