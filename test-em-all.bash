@@ -248,42 +248,41 @@ waitForService curl -k https://$HOST:$PORT/actuator/health
 
 #ACCESS_TOKEN=$(curl -k https://writer:secret@$HOST:$PORT/oauth/token -d grant_type=password -d username=user -d password=password -s | jq .access_token -r)
 
+read ACCESS_TOKEN < <(./get-access-token.bash)
 AUTH="-H \"Authorization: Bearer $ACCESS_TOKEN\""
-echo "ACCESS_TOKEN: " $ACCESS_TOKEN
-echo "AUTH: " $AUTH
+
 
 setupData
 
 waitForMessageProcessing
 
-## Verify that a normal request works, expect three recommendations and three reviews
-#assertCurl 200 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS $AUTH -s"
-#assertEqual "$MOV_ID_REVS_RECS" $(echo $RESPONSE | jq .movieId)
-#assertEqual 3 $(echo $RESPONSE | jq ".recommendations  | length")
-#assertEqual 1 $(echo $RESPONSE | jq ".reviews | length")
-#
-## Verify that a 404 (Not Found) error is returned for a non existing movieId ($MOV_ID_NOT_FOUND)
-#assertCurl 404 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_NOT_FOUND $AUTH -s"
-#
-## Verify that no recommendations are returned for movieId $MOV_ID_NO_RECS
-#assertCurl 200 "curl -k http://$HOST:$PORT/movie-composite/$MOV_ID_NO_RECS $AUTH -s"
-#assertEqual "$MOV_ID_NO_RECS" $(echo $RESPONSE | jq .movieId)
-#assertEqual 0 $(echo $RESPONSE | jq ".recommendations | length")
-#assertEqual 3 $(echo $RESPONSE | jq ".reviews | length")
-#
-## Verify that no reviews are returned for movieId $MOV_ID_NO_REVS
-#assertCurl 200 "curl -k http://$HOST:$PORT/movie-composite/$MOV_ID_NO_REVS $AUTH -s"
-#assertEqual $MOV_ID_NO_REVS $(echo $RESPONSE | jq .movieId)
-#assertEqual 3 $(echo $RESPONSE | jq ".recommendations | length")
-#assertEqual 0 $(echo $RESPONSE | jq ".reviews | length")
+# Verify that a normal request works, expect three recommendations and three reviews
+assertCurl 200 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS $AUTH -s"
+assertEqual "$MOV_ID_REVS_RECS" $(echo $RESPONSE | jq .movieId)
+assertEqual 3 $(echo $RESPONSE | jq ".recommendations  | length")
+assertEqual 1 $(echo $RESPONSE | jq ".reviews | length")
+
+# Verify that a 404 (Not Found) error is returned for a non existing movieId ($MOV_ID_NOT_FOUND)
+assertCurl 404 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_NOT_FOUND $AUTH -s"
+
+# Verify that no recommendations are returned for movieId $MOV_ID_NO_RECS
+assertCurl 200 "curl -k http://$HOST:$PORT/movie-composite/$MOV_ID_NO_RECS $AUTH -s"
+assertEqual "$MOV_ID_NO_RECS" $(echo $RESPONSE | jq .movieId)
+assertEqual 0 $(echo $RESPONSE | jq ".recommendations | length")
+assertEqual 3 $(echo $RESPONSE | jq ".reviews | length")
+
+# Verify that no reviews are returned for movieId $MOV_ID_NO_REVS
+assertCurl 200 "curl -k http://$HOST:$PORT/movie-composite/$MOV_ID_NO_REVS $AUTH -s"
+assertEqual $MOV_ID_NO_REVS $(echo $RESPONSE | jq .movieId)
+assertEqual 3 $(echo $RESPONSE | jq ".recommendations | length")
+assertEqual 0 $(echo $RESPONSE | jq ".reviews | length")
 
 
 
 # Verify that a request without access token fails on 401, Unauthorized
-#assertCurl 401 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS -s"
+assertCurl 401 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS -s"
 # Verify that the reader - client with only read scope can call the read API but not delete API.
 
-#Auth0
 #READER_ACCESS_TOKEN=$(curl --request POST \
 #--url 'https://${TENANT_DOMAIN_NAME}/oauth/token' \
 #--header 'content-type: application/json' \
@@ -292,10 +291,10 @@ waitForMessageProcessing
 #"audience":"https://localhost:8443/movie-composite", "scope":"openid
 #email movie:read", "client_id": "${CLIENT_ID}", "client_secret":
 #"${CLIENT_SECRET}"}' -s | jq -r .access_token)
-
+#
 #READER_ACCESS_TOKEN=$(curl -k https://reader:secret@$HOST:$PORT/oauth/token -d grant_type=password -d username=user -d password=password -s | jq .access_token -r)
 #READER_AUTH="-H \"Authorization: Bearer $READER_ACCESS_TOKEN\""
-
+#
 #assertCurl 200 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS $READER_AUTH -s"
 #assertCurl 403 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS $READER_AUTH -X DELETE -s"
 
@@ -311,6 +310,18 @@ fi
 
 
 
+
+
+
+
+
+
+
+#     -------------------------
+#     | JSON examples for curl|
+#     -------------------------
+#
+#
 #    body=\
 #'{"movieId":3331,"genre":"product 1","title":"lalalla", "recommendations":[
 #        {"recommendationId":3211,"author":"author 1","rate":1,"content":"content 1"},
@@ -345,6 +356,3 @@ fi
 #    ], "reviews":[
 #        {"reviewId":4511,"author":"author 1","subject":"subject 1","content":"content 1"}
 #    ]}'
-
-
-#docker-compose exec kafka /opt/kafka/bin/kafka-topics.sh --zookeeper zookeeper --list

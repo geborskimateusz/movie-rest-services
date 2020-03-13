@@ -56,6 +56,6 @@ token() {
 
 TOKEN="$(post "$(data)" | token)"
 
-AUTH="-H \"Authorization: Bearer $TOKEN\""
 
-echo $AUTH
+
+echo $TOKEN
