@@ -3,7 +3,7 @@ api:
   common:
     version: 1.0.0
     title: Movie API
-    description: Simple Movie API for created for purpose of learning microservices.
+    description: Simple Movie API created for purpose of learning microservices.
     termsOfServiceUrl: MINE TERMS OF SERVICE URL
     license: License
     licenseUrl: MY LICENSE URL
@@ -60,24 +60,6 @@ api:
                 This means that a delete request of a non existing movie will return <b>200 Ok</b>.
 server.port: 7000
 
-spring.application.name: movie-composite
-
-app:
-  eureka-username: u
-  eureka-password: p
-  eureka-server: localhost
-  auth-server: localhost
-
-eureka:
-  client:
-    serviceUrl:
-      defaultZone: "http://${app.eureka-username}:${app.eureka-password}@${app.eureka-server}:8761/eureka/"
-    initialInstanceInfoReplicationIntervalSeconds: 5
-    registryFetchIntervalSeconds: 5
-  instance:
-    leaseRenewalIntervalInSeconds: 5
-    leaseExpirationDurationInSeconds: 5
-
 ribbon.ServerListRefreshInterval: 5000
 
 ribbon.NFLoadBalancerPingInterval: 5
@@ -98,16 +80,6 @@ spring.cloud.stream:
       destination: reviews
       producer:
         required-groups: auditGroup
-
-spring.cloud.stream.kafka.binder:
-  brokers: 127.0.0.1
-  defaultBrokerPort: 9092
-
-spring.rabbitmq:
-  host: 127.0.0.1
-  port: 5672
-  username: guest
-  password: guest
 
 #Local authorization
 spring.security.oauth2.resourceserver.jwt.jwk-set-uri: http://${app.auth-server}:9999/.well-known/jwks.json
@@ -132,10 +104,23 @@ spring.profiles: docker
 
 server.port: 8080
 
-spring.rabbitmq.host: rabbitmq
+---
+spring.profiles: streaming_partitioned
 
-spring.cloud.stream.kafka.binder.brokers: kafka
+spring.cloud.stream.bindings.output-products.producer:
+  partition-key-expression: payload.key
+  partition-count: 2
 
-app:
-  eureka-server: eureka
-  auth-server: auth-server
+spring.cloud.stream.bindings.output-recommendations.producer:
+  partition-key-expression: payload.key
+  partition-count: 2
+
+spring.cloud.stream.bindings.output-reviews.producer:
+  partition-key-expression: payload.key
+  partition-count: 2
+
+---
+spring.profiles: kafka
+
+management.health.rabbit.enabled: false
+spring.cloud.stream.defaultBinder: kafka
