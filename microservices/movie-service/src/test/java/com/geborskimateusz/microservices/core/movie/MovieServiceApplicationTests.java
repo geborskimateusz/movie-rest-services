@@ -1,4 +1,5 @@
 package com.geborskimateusz.microservices.core.movie;
+
 import com.geborskimateusz.api.core.movie.Movie;
 import com.geborskimateusz.api.core.movie.MovieService;
 import com.geborskimateusz.api.event.Event;
@@ -28,7 +29,10 @@ import static org.mockito.Mockito.*;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = RANDOM_PORT, properties = {"spring.data.mongodb.port: 0", "eureka.client.enabled=false"})
+@SpringBootTest(webEnvironment = RANDOM_PORT, properties = {
+        "spring.data.mongodb.port: 0",
+        "eureka.client.enabled=false",
+        "spring.cloud.config.enabled=false"})
 public class MovieServiceApplicationTests {
 
     @Autowired
@@ -53,12 +57,12 @@ public class MovieServiceApplicationTests {
         Integer given = 1;
 
         assertNull(movieRepository.findByMovieId(given).block());
-        assertEquals(0,(long )movieRepository.count().block());
+        assertEquals(0, (long) movieRepository.count().block());
 
         sendCreateMovie(given);
 
         assertNotNull(movieRepository.findByMovieId(given).block());
-        assertEquals(1,(long )movieRepository.count().block());
+        assertEquals(1, (long) movieRepository.count().block());
 
         getAndVerify(given, HttpStatus.OK)
                 .jsonPath("$.movieId").isEqualTo(given)
@@ -111,11 +115,11 @@ public class MovieServiceApplicationTests {
         sendDeleteMovie(given);
 
         assertNull(movieRepository.findByMovieId(given).block());
-        assertEquals(0,(long )movieRepository.count().block());
+        assertEquals(0, (long) movieRepository.count().block());
     }
 
     private void sendDeleteMovie(Integer given) {
-        Event<Integer, Movie> event = new Event<>(Event.Type.DELETE,given,null);
+        Event<Integer, Movie> event = new Event<>(Event.Type.DELETE, given, null);
         input.send(new GenericMessage<>(event));
     }
 

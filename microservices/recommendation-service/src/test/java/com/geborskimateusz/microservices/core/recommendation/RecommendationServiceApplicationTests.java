@@ -23,7 +23,11 @@ import static org.assertj.core.api.Java6Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(SpringExtension.class)
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties = {"spring.data.mongodb.port: 0","eureka.client.enabled=false"})
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+        properties = {
+                "spring.data.mongodb.port: 0",
+                "eureka.client.enabled=false",
+                "spring.cloud.config.enabled=false"})
 public class RecommendationServiceApplicationTests {
 
     @Autowired
@@ -149,12 +153,12 @@ public class RecommendationServiceApplicationTests {
 
     private void sendCreateRecommendationEvent(int movieId, int recommendationId) {
         Recommendation recommendation = Recommendation.builder().movieId(movieId).recommendationId(recommendationId).author("Author 3").rate(3).content("Content 3").build();
-        Event event = new Event(Event.Type.CREATE, movieId,recommendation);
+        Event event = new Event(Event.Type.CREATE, movieId, recommendation);
         input.send(new GenericMessage<>(event));
     }
 
     private void deleteAndVerify(int movieId) {
-        Event event = new Event(Event.Type.DELETE,movieId,null);
+        Event event = new Event(Event.Type.DELETE, movieId, null);
         input.send(new GenericMessage<>(event));
     }
 

@@ -36,9 +36,12 @@ import static reactor.core.publisher.Mono.just;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
-        webEnvironment=RANDOM_PORT,
-        classes = {MovieCompositeServiceApplication.class, TestSecurityConfig.class },
-        properties = {"spring.main.allow-bean-definition-overriding=true","eureka.client.enabled=false"})
+        webEnvironment = RANDOM_PORT,
+        classes = {MovieCompositeServiceApplication.class, TestSecurityConfig.class},
+        properties = {
+                "spring.main.allow-bean-definition-overriding=true",
+                "eureka.client.enabled=false",
+                "spring.cloud.config.enabled=false"})
 public class MovieCompositeServiceApplicationTests {
 
     public static final String FAKE_ADDRESS = "Fake address";

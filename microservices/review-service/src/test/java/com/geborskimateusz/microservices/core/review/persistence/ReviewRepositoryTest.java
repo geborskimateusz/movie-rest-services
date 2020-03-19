@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.transaction.annotation.Propagation.NOT_SUPPORTED;
 
 @ExtendWith(SpringExtension.class)
-@DataJpaTest
+@DataJpaTest(properties = "spring.cloud.config.enabled=false")
 @Transactional(propagation = NOT_SUPPORTED)
 class ReviewRepositoryTest {
 

@@ -18,7 +18,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.hasSize;
 
 @ExtendWith(SpringExtension.class)
-@DataMongoTest
+@DataMongoTest(properties = "spring.cloud.config.enabled=false")
 public class RecommendationRepositoryTest {
 
     public static final int BASE_RECOMMENDATION_ID = 1;
