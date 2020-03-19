@@ -43,7 +43,7 @@ class EurekaServerApplicationTests {
         assertEquals(HttpStatus.OK, entity.getStatusCode());
         assertEquals(expectedReponseBody, entity.getBody());
     }
-    
+
     @Test
     public void statusUp() {
         String expectedBody = "{\"status\":\"UP\"}";
