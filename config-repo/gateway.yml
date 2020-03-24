@@ -76,7 +76,6 @@ spring.cloud.gateway.routes:
   filters:
   - SetPath=/501
 
-#Local authorization
 spring.security.oauth2.resourceserver.jwt.jwk-set-uri: http://${app.auth-server}:9999/.well-known/jwks.json
 
 #OAuth
