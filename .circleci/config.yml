@@ -1,0 +1,32 @@
+
+version: 2
+jobs:
+  build:
+    working_directory: ~/movie-rest-services
+
+    docker:
+      - image: circleci/openjdk:8-jdk-stretch
+
+    steps:
+      - checkout
+
+      - run:
+          name: Generate cumulative pom.xml checksum
+          command: |
+            find . -type f -name "pom.xml" -exec sh -c "sha256sum {} >> ~/pom-checksum.tmp" \;
+            sort -o ~/pom-checksum ~/pom-checksum.tmp
+          when: always
+
+      - restore_cache:
+          keys:
+            - movie-rest-services-{{ checksum "~/pom-checksum" }}
+            - movie-rest-services-
+
+      - run: mvn de.qaware.maven:go-offline-maven-plugin:resolve-dependencies
+
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: movie-rest-services-{{ checksum "~/pom-checksum" }}
+
+      - run: mvn package
