@@ -1,6 +1,8 @@
 package com.geborskimateusz.microservices.composite.movie.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import com.geborskimateusz.api.core.movie.Movie;
 import com.geborskimateusz.api.core.movie.MovieService;
 import com.geborskimateusz.api.core.recommendation.Recommendation;
@@ -12,18 +14,23 @@ import com.geborskimateusz.microservices.composite.movie.services.utils.MessageS
 import com.geborskimateusz.util.exceptions.InvalidInputException;
 import com.geborskimateusz.util.exceptions.NotFoundException;
 import com.geborskimateusz.util.http.HttpErrorInfo;
+
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.util.UriComponentsBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
+import java.net.URI;
+import java.time.Duration;
 
 
 @Slf4j
@@ -46,15 +53,19 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
 
     private final MessageSources messageSources;
 
+    public final int movieServiceTimeoutSec;
+
     @Autowired
     public MovieCompositeIntegration(
             WebClient.Builder webClientBuilder,
             MessageSources messageSources,
-            ObjectMapper mapper
+            ObjectMapper mapper,
+            @Value("${app.movie-service.timeoutSec}") int movieServiceTimeoutSec
     ) {
         this.webClientBuilder = webClientBuilder;
         this.messageSources = messageSources;
         this.mapper = mapper;
+        this.movieServiceTimeoutSec = movieServiceTimeoutSec;
     }
 
     @Override
@@ -93,19 +104,23 @@ public class MovieCompositeIntegration implements MovieService, RecommendationSe
         return review;
     }
 
+    @Retry(name = "movie")
+    @CircuitBreaker(name = "movie")
     @Override
-    public Mono<Movie> getMovie(Integer movieId) {
+    public Mono<Movie> getMovie(Integer movieId, int delay, int faultPercent) {
+        URI url = UriComponentsBuilder
+                .fromUriString(MOVIE_SERVICE_URL + MOVIE + "/{movieId}?delay={delay}&faultPercent={faultPercent}")
+                .build(movieId, delay, faultPercent);
 
-        String url = MOVIE_SERVICE_URL + MOVIE + "/" + movieId;
-
-        log.debug("Will call getMovie API on URL: {}", url);
+        log.debug("Will call getMovie API on URL: {}", url.toString());
 
         return getWebClient()
                 .get().uri(url)
                 .retrieve()
                 .bodyToMono(Movie.class)
                 .log()
-                .onErrorMap(WebClientResponseException.class, this::handleHttpClientException);
+                .onErrorMap(WebClientResponseException.class, this::handleHttpClientException)
+                .timeout(Duration.ofSeconds(movieServiceTimeoutSec));
     }
 
 

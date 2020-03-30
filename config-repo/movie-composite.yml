@@ -86,6 +86,9 @@ spring.security.oauth2.resourceserver.jwt.jwk-set-uri: http://${app.auth-server}
 #OAuth
 #spring.security.oauth2.resourceserver.jwt.issuer-uri: https://dev-3cs7odlv.eu.auth0.com/
 
+app.movie-service.timeoutSec: 2
+
+
 logging:
   level:
     root: INFO

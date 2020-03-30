@@ -36,7 +36,7 @@ public class BaseMovieCompositeService implements MovieCompositeService {
     }
 
     @Override
-    public Mono<MovieAggregate> getCompositeMovie(Integer movieId) {
+    public Mono<MovieAggregate> getCompositeMovie(Integer movieId, int delay, int faultPercent) {
         log.debug("getCompositeMovie: lookup a movie aggregate for movieId: {}", movieId);
 
         return
@@ -47,7 +47,7 @@ public class BaseMovieCompositeService implements MovieCompositeService {
                                 (List<Review>) values[3],
                                 serviceUtil.getServiceAddress()),
                         ReactiveSecurityContextHolder.getContext().defaultIfEmpty(nullSC),
-                        movieCompositeIntegration.getMovie(movieId),
+                        movieCompositeIntegration.getMovie(movieId,delay,faultPercent),
                         movieCompositeIntegration.getRecommendations(movieId).collectList(),
                         movieCompositeIntegration.getReviews(movieId).collectList()
                 ).doOnError(ex -> log.warn("getCompositeMovie failed: {}", ex.toString())).log();
