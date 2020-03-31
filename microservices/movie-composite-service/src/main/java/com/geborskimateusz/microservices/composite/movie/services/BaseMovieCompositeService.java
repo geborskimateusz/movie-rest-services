@@ -6,9 +6,12 @@ import com.geborskimateusz.api.core.movie.Movie;
 import com.geborskimateusz.api.core.recommendation.Recommendation;
 import com.geborskimateusz.api.core.review.Review;
 import com.geborskimateusz.microservices.composite.movie.services.utils.CompositeAggregator;
+import com.geborskimateusz.util.exceptions.NotFoundException;
 import com.geborskimateusz.util.http.ServiceUtil;
+import io.github.resilience4j.reactor.retry.RetryExceptionWrapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.integration.handler.advice.RequestHandlerCircuitBreakerAdvice;
 import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextImpl;
@@ -47,11 +50,29 @@ public class BaseMovieCompositeService implements MovieCompositeService {
                                 (List<Review>) values[3],
                                 serviceUtil.getServiceAddress()),
                         ReactiveSecurityContextHolder.getContext().defaultIfEmpty(nullSC),
-                        movieCompositeIntegration.getMovie(movieId,delay,faultPercent),
+                        movieCompositeIntegration.getMovie(movieId, delay, faultPercent)
+                                .onErrorMap(RetryExceptionWrapper.class, Throwable::getCause)
+                                .onErrorReturn(RequestHandlerCircuitBreakerAdvice.CircuitBreakerOpenException.class, getMovieFallbackValue(movieId)),
                         movieCompositeIntegration.getRecommendations(movieId).collectList(),
                         movieCompositeIntegration.getReviews(movieId).collectList()
                 ).doOnError(ex -> log.warn("getCompositeMovie failed: {}", ex.toString())).log();
 
+    }
+
+    /**
+     * The fallback logic can be based on movieId lookup information on the product from
+     * alternative sources, for example, an internal cache. In our case, we return a hardcoded
+     * value unless movieId is 13 ; otherwise, we throw a not found exception:
+     *
+     * @param movieId
+     * @return
+     */
+    private Movie getMovieFallbackValue(Integer movieId) {
+        if (movieId == 13) throw new NotFoundException("Movie with id " + movieId + " not found in fallback cache.");
+        return Movie.builder()
+                .movieId(movieId).genre("Fallback genre").title("Fallback title")
+                .address(serviceUtil.getServiceAddress())
+                .build();
     }
 
     @Override
@@ -165,8 +186,8 @@ public class BaseMovieCompositeService implements MovieCompositeService {
         if (
             //@formatter:off
                 securityContext != null &&
-                securityContext.getAuthentication() != null &&
-                securityContext.getAuthentication() instanceof JwtAuthenticationToken
+                        securityContext.getAuthentication() != null &&
+                        securityContext.getAuthentication() instanceof JwtAuthenticationToken
             //@formatter:on
         ) {
             Jwt jwt = ((JwtAuthenticationToken) securityContext.getAuthentication()).getToken();

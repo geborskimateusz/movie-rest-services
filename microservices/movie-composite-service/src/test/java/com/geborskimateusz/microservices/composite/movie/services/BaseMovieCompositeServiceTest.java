@@ -54,11 +54,11 @@ class BaseMovieCompositeServiceTest {
         List<Recommendation> recommendations = getRecommendations(movie);
         List<Review> reviews = getReviews(movie);
 
-        when(movieCompositeIntegration.getMovie(given)).thenReturn(Mono.just(movie));
+        when(movieCompositeIntegration.getMovie(given, anyInt(),anyInt())).thenReturn(Mono.just(movie));
         when(movieCompositeIntegration.getRecommendations(movie.getMovieId())).thenReturn(Flux.fromIterable(recommendations));
         when(movieCompositeIntegration.getReviews(movie.getMovieId())).thenReturn(Flux.fromIterable(reviews));
 
-        MovieAggregate movieAggregate = movieCompositeService.getCompositeMovie(given).block();
+        MovieAggregate movieAggregate = movieCompositeService.getCompositeMovie(given, anyInt(),anyInt()).block();
 
         assertNotNull(movieAggregate);
         assertAll(() -> {
@@ -73,9 +73,9 @@ class BaseMovieCompositeServiceTest {
     void getCompositeMovieShouldThrowNotFoundException() {
         int given = 1;
 
-        when(movieCompositeIntegration.getMovie(anyInt())).thenThrow(NotFoundException.class);
+        when(movieCompositeIntegration.getMovie(anyInt(), anyInt(),anyInt())).thenThrow(NotFoundException.class);
 
-        assertThrows(NotFoundException.class, () -> movieCompositeService.getCompositeMovie(given));
+        assertThrows(NotFoundException.class, () -> movieCompositeService.getCompositeMovie(given, anyInt(),anyInt()));
     }
 
 

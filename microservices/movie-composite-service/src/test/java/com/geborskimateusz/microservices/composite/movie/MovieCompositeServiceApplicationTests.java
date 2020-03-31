@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
@@ -87,7 +88,7 @@ public class MovieCompositeServiceApplicationTests {
         List<Recommendation> recommendations = getRecommendations(movie);
         List<Review> reviews = getReviews(movie);
 
-        Mockito.when(movieCompositeIntegration.getMovie(given)).thenReturn(Mono.just(movie));
+        Mockito.when(movieCompositeIntegration.getMovie(given, anyInt(),anyInt())).thenReturn(Mono.just(movie));
         Mockito.when(movieCompositeIntegration.getRecommendations(movie.getMovieId())).thenReturn(Flux.fromIterable(recommendations));
         Mockito.when(movieCompositeIntegration.getReviews(movie.getMovieId())).thenReturn(Flux.fromIterable(reviews));
 
@@ -101,7 +102,7 @@ public class MovieCompositeServiceApplicationTests {
     void getMovieByIdThrowsNotFoundException() {
         int given = 1;
 
-        Mockito.when(movieCompositeIntegration.getMovie(given)).thenThrow(NotFoundException.class);
+        Mockito.when(movieCompositeIntegration.getMovie(given, anyInt(),anyInt())).thenThrow(NotFoundException.class);
 
         getAndVerifyMovie(given, HttpStatus.NOT_FOUND)
                 .jsonPath("$.path").isEqualTo("/movie-composite/" + given);
@@ -111,7 +112,7 @@ public class MovieCompositeServiceApplicationTests {
     void getMovieByIdThrowsInvalidInputException() {
         int given = 0;
 
-        Mockito.when(movieCompositeIntegration.getMovie(given)).thenThrow(InvalidInputException.class);
+        Mockito.when(movieCompositeIntegration.getMovie(given, anyInt(),anyInt())).thenThrow(InvalidInputException.class);
 
         getAndVerifyMovie(given, HttpStatus.UNPROCESSABLE_ENTITY)
                 .jsonPath("$.path").isEqualTo("/movie-composite/" + given);
