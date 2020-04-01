@@ -231,19 +231,18 @@ function setupData() {
 function testCircuitBreaker() {
 
   echo "Start Circuit Breaker Test"
-  EXEC="docker run --rm -it --network=my-network-alpine"
+  EXEC="docker run --rm -it --network=my-network alpine"
 
   #Verify that circuit breaker is closed via health endpoint
-  assertEqual "CLOSED" "$($EXEC wget movie-composite:8080/actuator/health -q0 - | jq -r .details.movieCircuitBreaker.details.state)"
+  assertEqual "CLOSED" "$($EXEC wget movie-composite:8080/actuator/health -qO - | jq -r .details.movieCircuitBreaker.details.state)"
 
   #Three slow calls to get TimeoutException
-  for (( i = 0; i < 3; i++ ));
-  do
-    assertCurl 500 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS?delay=3 $AUTH -s"
-    message=$(echo $RESPONSE | jq -r .message)
-    assertEqual "Did not observe any item or terminal signal within 2000ms" "${message:0:57}"
-
-  done
+    for ((n=0; n<3; n++))
+    do
+        assertCurl 500 "curl -k https://$HOST:$PORT/movie-composite/MOV_ID_REVS_RECS?delay=3 $AUTH -s"
+        message=$(echo $RESPONSE | jq -r .message)
+        assertEqual "Did not observe any item or terminal signal within 2000ms" "${message:0:57}"
+    done
 }
 
 
