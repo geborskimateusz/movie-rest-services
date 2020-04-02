@@ -13,134 +13,123 @@
 
 function assertCurl() {
 
-    local expectedHttpCode=$1
-    local curlCmd="$2 -w \"%{http_code}\""
-    local result=$(eval $curlCmd)
-    local httpCode="${result:(-3)}"
-    RESPONSE='' && (( ${#result} > 3 )) && RESPONSE="${result%???}"
+  local expectedHttpCode=$1
+  local curlCmd="$2 -w \"%{http_code}\""
+  local result=$(eval $curlCmd)
+  local httpCode="${result:(-3)}"
+  RESPONSE='' && ((${#result} > 3)) && RESPONSE="${result%???}"
 
-    if [ "$httpCode" = "$expectedHttpCode" ]
-    then
-        if [ "$httpCode" = "200" ]
-        then
-            echo "Test OK (HTTP Code: $httpCode)"
-        else
-            echo "Test OK (HTTP Code: $httpCode, $RESPONSE)"
-        fi
-        return 0
+  if [ "$httpCode" = "$expectedHttpCode" ]; then
+    if [ "$httpCode" = "200" ]; then
+      echo "Test OK (HTTP Code: $httpCode)"
     else
-        echo  "Test FAILED, EXPECTED HTTP Code: $expectedHttpCode, GOT: $httpCode, WILL ABORT!"
-        echo  "- Failing command: $curlCmd"
-        echo  "- Response Body: $RESPONSE"
-        return 1
+      echo "Test OK (HTTP Code: $httpCode, $RESPONSE)"
     fi
+    return 0
+  else
+    echo "Test FAILED, EXPECTED HTTP Code: $expectedHttpCode, GOT: $httpCode, WILL ABORT!"
+    echo "- Failing command: $curlCmd"
+    echo "- Response Body: $RESPONSE"
+    return 1
+  fi
 }
 
 function assertEqual() {
 
-    local expected=$1
-    local actual=$2
-    local message=$3
+  local expected=$1
+  local actual=$2
+  local message=$3
 
-    printf "Test case: $message -> "
+  printf "Test case: $message -> "
 
-    if [ "$actual" = "$expected" ]
-    then
-        echo "Test OK (actual value: $actual)"
-        return 0
-    else
-        echo "Test FAILED, EXPECTED VALUE: $expected, ACTUAL VALUE: $actual, WILL ABORT"
-        return 1
-    fi
+  if [ "$actual" = "$expected" ]; then
+    echo "Test OK (actual value: $actual)"
+    return 0
+  else
+    echo "Test FAILED, EXPECTED VALUE: $expected, ACTUAL VALUE: $actual, WILL ABORT"
+    return 1
+  fi
 }
 
 function testUrl() {
-    url=$@
-    if $url -ks -f -o /dev/null
-    then
-          return 0
-    else
-          return 1
-    fi;
+  url=$@
+  if $url -ks -f -o /dev/null; then
+    return 0
+  else
+    return 1
+  fi
 }
 
 function waitForService() {
-    url=$@
-    echo -n "Wait for: $url... "
-    n=0
-    until testUrl $url
-    do
-        n=$((n + 1))
-        if [[ $n == 100 ]]
-        then
-            echo " Give up"
-            exit 1
-        else
-            sleep 3
-            echo -n ", retry #$n "
-        fi
-    done
-    echo "DONE, continues..."
+  url=$@
+  echo -n "Wait for: $url... "
+  n=0
+  until testUrl $url; do
+    n=$((n + 1))
+    if [[ $n == 100 ]]; then
+      echo " Give up"
+      exit 1
+    else
+      sleep 3
+      echo -n ", retry #$n "
+    fi
+  done
+  echo "DONE, continues..."
 }
 
 function testCompositeCreated() {
 
-    # Expect that the Movie Composite for productId $MOV_ID_REVS_RECS has been created with three recommendations and three reviews
-    if ! assertCurl 200 "curl $AUTH -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS -s"
-    then
-        echo -n "FAIL"
-        return 1
-    fi
+  # Expect that the Movie Composite for productId $MOV_ID_REVS_RECS has been created with three recommendations and three reviews
+  if ! assertCurl 200 "curl $AUTH -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS -s"; then
+    echo -n "FAIL"
+    return 1
+  fi
 
-    set +e
-    assertEqual "$MOV_ID_REVS_RECS" $(echo $RESPONSE | jq .movieId)
-    if [ "$?" -eq "1" ] ; then return 1; fi
+  set +e
+  assertEqual "$MOV_ID_REVS_RECS" $(echo $RESPONSE | jq .movieId)
+  if [ "$?" -eq "1" ]; then return 1; fi
 
-    assertEqual 3 $(echo $RESPONSE | jq ".recommendations | length")
-    if [ "$?" -eq "1" ] ; then return 1; fi
+  assertEqual 3 $(echo $RESPONSE | jq ".recommendations | length")
+  if [ "$?" -eq "1" ]; then return 1; fi
 
-    assertEqual 1 $(echo $RESPONSE | jq ".reviews | length")
-    if [ "$?" -eq "1" ] ; then return 1; fi
+  assertEqual 1 $(echo $RESPONSE | jq ".reviews | length")
+  if [ "$?" -eq "1" ]; then return 1; fi
 
-    set -e
+  set -e
 }
 
 function waitForMessageProcessing() {
-    echo "Wait for messages to be processed... "
+  echo "Wait for messages to be processed... "
 
-    # Give background processing some time to complete...
-    sleep 1
+  # Give background processing some time to complete...
+  sleep 1
 
-    n=0
-    until testCompositeCreated
-    do
-        n=$((n + 1))
-        if [[ $n == 40 ]]
-        then
-            echo " Give up"
-            exit 1
-        else
-            sleep 3
-            echo -n ", retry #$n "
-        fi
-    done
-    echo "All messages are now processed!"
+  n=0
+  until testCompositeCreated; do
+    n=$((n + 1))
+    if [[ $n == 40 ]]; then
+      echo " Give up"
+      exit 1
+    else
+      sleep 3
+      echo -n ", retry #$n "
+    fi
+  done
+  echo "All messages are now processed!"
 }
 
 function recreateComposite() {
   local movieId=$1
   local composite=$2
 
-    assertCurl 200 "curl $AUTH -X DELETE -k https://$HOST:$PORT/movie-composite/${movieId} -s"
-    curl -X POST -k https://$HOST:$PORT/movie-composite -H "Content-Type: application/json" -H "Authorization: Bearer $ACCESS_TOKEN" --data "$composite"
+  assertCurl 200 "curl $AUTH -X DELETE -k https://$HOST:$PORT/movie-composite/${movieId} -s"
+  curl -X POST -k https://$HOST:$PORT/movie-composite -H "Content-Type: application/json" -H "Authorization: Bearer $ACCESS_TOKEN" --data "$composite"
 }
 
 function setupData() {
 
-
   body="{\"movieId\":$MOV_ID_REVS_RECS"
-    body+=\
-',"genre": "Science Fiction",
+  body+=',"genre": "Science Fiction",
     "title": "Star Wars 1",
     "recommendations": [
       {
@@ -173,9 +162,8 @@ function setupData() {
   }'
   recreateComposite "$MOV_ID_REVS_RECS" "$body"
 
-    body="{\"movieId\":$MOV_ID_NO_RECS"
-    body+=\
-',"genre": "Science Fiction",
+  body="{\"movieId\":$MOV_ID_NO_RECS"
+  body+=',"genre": "Science Fiction",
       "title": "Star Wars 1",
       "reviews": [
         {
@@ -198,11 +186,10 @@ function setupData() {
         }
       ]
     }'
-    recreateComposite "$MOV_ID_NO_RECS" "$body"
+  recreateComposite "$MOV_ID_NO_RECS" "$body"
 
-    body="{\"movieId\":$MOV_ID_NO_REVS"
-    body+=\
-',"genre": "Science Fiction",
+  body="{\"movieId\":$MOV_ID_NO_REVS"
+  body+=',"genre": "Science Fiction",
       "title": "Star Wars 1",
       "recommendations": [
         {
@@ -225,7 +212,7 @@ function setupData() {
         }
       ]
     }'
-    recreateComposite "$MOV_ID_NO_REVS" "$body"
+  recreateComposite "$MOV_ID_NO_REVS" "$body"
 }
 
 function testCircuitBreaker() {
@@ -234,34 +221,31 @@ function testCircuitBreaker() {
   EXEC="docker run --rm -it --network=my-network alpine"
 
   #Verify that circuit breaker is closed via health endpoint
-  assertEqual "CLOSED" "$($EXEC wget movie-composite:8080/actuator/health -qO - | jq -r .details.movieCircuitBreaker.details.state)"
+  assertEqual "CLOSED" "$($EXEC wget movie-composite:8080/actuator/health -qO - | jq -r .details.movieCircuitBreaker.details.state)" "Verify that circuit breaker has status CLOSED"
 
   #Three slow calls to get TimeoutException
-    for ((n=0; n<3; n++))
-    do
-        assertCurl 500 "curl -k https://$HOST:$PORT/movie-composite/MOV_ID_REVS_RECS?delay=3 $AUTH -s"
-        message=$(echo $RESPONSE | jq -r .message)
-        assertEqual "Did not observe any item or terminal signal within 2000ms" "${message:0:57}"
-    done
+  for ((n = 0; n < 3; n++)); do
+    assertCurl 500 "curl -k https://$HOST:$PORT/movie-composite/MOV_ID_REVS_RECS?delay=3 $AUTH -s"
+    message=$(echo $RESPONSE | jq -r .message)
+    assertEqual "Did not observe any item or terminal signal within 2000ms" "${message:0:57}"
+  done
 }
-
 
 set -e
 
-echo "Start Tests:" `date`
+echo "Start Tests:" $(date)
 
 echo "HOST=${HOST}"
 echo "PORT=${PORT}"
 
-if [[ $@ == *"start"* ]]
-then
+if [[ $@ == *"start"* ]]; then
 
-    echo "Restarting the test environment..."
+  echo "Restarting the test environment..."
 
-    echo "$ docker-compose down --remove-orphans"
-    docker-compose down --remove-orphans
-    echo "$ docker-compose up -d"
-    docker-compose up -d
+  echo "$ docker-compose down --remove-orphans"
+  docker-compose down --remove-orphans
+  echo "$ docker-compose up -d"
+  docker-compose up -d
 fi
 
 waitForService curl -k https://$HOST:$PORT/actuator/health
@@ -275,11 +259,9 @@ ACCESS_TOKEN=$(curl -k https://writer:secret@$HOST:$PORT/oauth/token -d grant_ty
 
 AUTH="-H \"Authorization: Bearer $ACCESS_TOKEN\""
 
-
 setupData
 
 waitForMessageProcessing
-
 
 #  Test messages
 ID_CONFIRMATION="Comparing id's."
@@ -325,13 +307,12 @@ assertCurl 403 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS $R
 
 testCircuitBreaker
 
-echo "End, all tests OK:" `date`
+echo "End, all tests OK:" $(date)
 
-if [[ $@ == *"stop"* ]]
-then
-    echo "Stopping the test environment..."
-    echo "$ docker-compose down --remove-orphans"
-    docker-compose down --remove-orphans
+if [[ $@ == *"stop"* ]]; then
+  echo "Stopping the test environment..."
+  echo "$ docker-compose down --remove-orphans"
+  docker-compose down --remove-orphans
 fi
 
 #     -------------------------

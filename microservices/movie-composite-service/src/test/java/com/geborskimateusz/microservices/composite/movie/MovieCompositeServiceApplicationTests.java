@@ -56,6 +56,7 @@ public class MovieCompositeServiceApplicationTests {
     @MockBean
     ServiceUtil serviceUtil;
 
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.initMocks(this);
@@ -88,7 +89,7 @@ public class MovieCompositeServiceApplicationTests {
         List<Recommendation> recommendations = getRecommendations(movie);
         List<Review> reviews = getReviews(movie);
 
-        Mockito.when(movieCompositeIntegration.getMovie(given, anyInt(),anyInt())).thenReturn(Mono.just(movie));
+        Mockito.when(movieCompositeIntegration.getMovie(anyInt(), anyInt(),anyInt())).thenReturn(Mono.just(movie));
         Mockito.when(movieCompositeIntegration.getRecommendations(movie.getMovieId())).thenReturn(Flux.fromIterable(recommendations));
         Mockito.when(movieCompositeIntegration.getReviews(movie.getMovieId())).thenReturn(Flux.fromIterable(reviews));
 
@@ -100,7 +101,7 @@ public class MovieCompositeServiceApplicationTests {
 
     @Test
     void getMovieByIdThrowsNotFoundException() {
-        int given = 1;
+        int given = anyInt();
 
         Mockito.when(movieCompositeIntegration.getMovie(given, anyInt(),anyInt())).thenThrow(NotFoundException.class);
 
@@ -110,8 +111,7 @@ public class MovieCompositeServiceApplicationTests {
 
     @Test
     void getMovieByIdThrowsInvalidInputException() {
-        int given = 0;
-
+        int given = anyInt();
         Mockito.when(movieCompositeIntegration.getMovie(given, anyInt(),anyInt())).thenThrow(InvalidInputException.class);
 
         getAndVerifyMovie(given, HttpStatus.UNPROCESSABLE_ENTITY)
