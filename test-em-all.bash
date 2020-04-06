@@ -221,14 +221,19 @@ function testCircuitBreaker() {
   EXEC="docker run --rm -it --network=my-network alpine"
 
   #Verify that circuit breaker is closed via health endpoint
-  assertEqual "CLOSED" "$($EXEC wget movie-composite:8080/actuator/health -qO - | jq .components.movieCircuitBreaker.details.state)" "Verify that circuit breaker has status CLOSED"
+  assertEqual "CLOSED" "$($EXEC wget movie-composite:8080/actuator/health -qO - | jq -r .components.movieCircuitBreaker.details.state)" "Verify that circuit breaker has status CLOSED"
+
+  assertCurl 500 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS?delay=3 $AUTH -s"
+  message=$(echo $RESPONSE | jq -r .message)
+  assertEqual "Did not observe any item or terminal signal within 2000ms" "${message:0:57}"
 
   #Three slow calls to get TimeoutException
   for ((n = 0; n < 3; n++)); do
-    assertCurl 500 "curl -k https://$HOST:$PORT/movie-composite/MOV_ID_REVS_RECS?delay=3 $AUTH -s"
+    assertCurl 500 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS?delay=3 $AUTH -s"
     message=$(echo $RESPONSE | jq -r .message)
-    assertEqual "Did not observe any item or terminal signal within 2000ms" "${message:0:57}"
+    assertEqual "CircuitBreaker 'movie' is open" "${message:0:57}"
   done
+
 }
 
 set -e
