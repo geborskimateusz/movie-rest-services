@@ -98,7 +98,7 @@ resilience4j.retry:
 
 resilience4j.circuitbreaker:
   backends:
-    product:
+    movie:
       registerHealthIndicator: true
       ringBufferSizeInClosedState: 5
       failureRateThreshold: 50

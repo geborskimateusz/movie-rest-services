@@ -221,7 +221,7 @@ function testCircuitBreaker() {
   EXEC="docker run --rm -it --network=my-network alpine"
 
   #Verify that circuit breaker is closed via health endpoint
-  assertEqual "CLOSED" "$($EXEC wget movie-composite:8080/actuator/health -qO - | jq -r .details.movieCircuitBreaker.details.state)" "Verify that circuit breaker has status CLOSED"
+  assertEqual "CLOSED" "$($EXEC wget movie-composite:8080/actuator/health -qO - | jq .components.movieCircuitBreaker.details.state)" "Verify that circuit breaker has status CLOSED"
 
   #Three slow calls to get TimeoutException
   for ((n = 0; n < 3; n++)); do
