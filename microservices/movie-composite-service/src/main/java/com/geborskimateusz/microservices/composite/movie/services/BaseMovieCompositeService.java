@@ -68,7 +68,12 @@ public class BaseMovieCompositeService implements MovieCompositeService {
      * @return
      */
     private Movie getMovieFallbackValue(Integer movieId) {
-        if (movieId == 13) throw new NotFoundException("Movie with id " + movieId + " not found in fallback cache.");
+        log.warn("Creating fallback movie for movieId {}", movieId);
+        if (movieId == 13) {
+            String errMsg = "Moviw Id: " + movieId + " not found in fallback cache!";
+            log.warn(errMsg);
+            throw new NotFoundException(errMsg);
+        }
         return Movie.builder()
                 .movieId(movieId).genre("Fallback genre").title("Fallback title")
                 .address(serviceUtil.getServiceAddress())

@@ -227,7 +227,7 @@ function testCircuitBreaker() {
   message=$(echo $RESPONSE | jq -r .message)
   assertEqual "Did not observe any item or terminal signal within 2000ms" "${message:0:57}"
 
-  #Three slow calls to get TimeoutException
+  #Verify that ciruit breaker is open
   for ((n = 0; n < 3; n++)); do
     assertCurl 500 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS?delay=3 $AUTH -s"
     message=$(echo $RESPONSE | jq -r .message)
@@ -264,51 +264,51 @@ ACCESS_TOKEN=$(curl -k https://writer:secret@$HOST:$PORT/oauth/token -d grant_ty
 
 AUTH="-H \"Authorization: Bearer $ACCESS_TOKEN\""
 
-setupData
+#setupData
 
 waitForMessageProcessing
 
-#  Test messages
-ID_CONFIRMATION="Comparing id's."
-RECOMMENDATIONS_CONFIRMATION="Comparing recommendations length."
-REVIEWS_CONFIRMATION="Comparing reviews length."
-
-# Verify that a normal request works, expect three recommendations and three reviews
-assertCurl 200 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS $AUTH -s"
-assertEqual "$MOV_ID_REVS_RECS" $(echo $RESPONSE | jq .movieId) "$ID_CONFIRMATION"
-assertEqual 3 $(echo $RESPONSE | jq ".recommendations  | length") "$RECOMMENDATIONS_CONFIRMATION"
-assertEqual 1 $(echo $RESPONSE | jq ".reviews | length") "$REVIEWS_CONFIRMATION"
-
-# Verify that a 404 (Not Found) error is returned for a non existing movieId ($MOV_ID_NOT_FOUND)
-assertCurl 404 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_NOT_FOUND $AUTH -s"
-
-# Verify that no recommendations are returned for movieId $MOV_ID_NO_RECS
-assertCurl 200 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_NO_RECS $AUTH -s"
-assertEqual "$MOV_ID_NO_RECS" $(echo $RESPONSE | jq .movieId) "$ID_CONFIRMATION"
-assertEqual 0 $(echo $RESPONSE | jq ".recommendations | length") "$RECOMMENDATIONS_CONFIRMATION"
-assertEqual 3 $(echo $RESPONSE | jq ".reviews | length") "$REVIEWS_CONFIRMATION"
-
-# Verify that no reviews are returned for movieId $MOV_ID_NO_REVS
-assertCurl 200 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_NO_REVS $AUTH -s"
-assertEqual $MOV_ID_NO_REVS $(echo $RESPONSE | jq .movieId) "$ID_CONFIRMATION"
-assertEqual 3 $(echo $RESPONSE | jq ".recommendations | length") "$RECOMMENDATIONS_CONFIRMATION"
-assertEqual 0 $(echo $RESPONSE | jq ".reviews | length") "$REVIEWS_CONFIRMATION"
-
-## Verify that a request without access token fails on 401, Unauthorized
-assertCurl 401 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS -s"
-
-## Verify that the reader - client with only read scope can call the read API but not delete API.
-READER_ACCESS_TOKEN=$(curl -k https://reader:secret@$HOST:$PORT/oauth/token -d grant_type=password -d username=user -d password=password -s | jq .access_token -r)
+##  Test messages
+#ID_CONFIRMATION="Comparing id's."
+#RECOMMENDATIONS_CONFIRMATION="Comparing recommendations length."
+#REVIEWS_CONFIRMATION="Comparing reviews length."
 #
-##Testing with an OpenID Connect provider – Auth0
-##SCOPE="movie:read"
-##read $READER_ACCESS_TOKEN < <(./get-access-token.bash $SCOPE)
-##AUTH="-H \"Authorization: Bearer $READER_ACCESS_TOKEN\""
+## Verify that a normal request works, expect three recommendations and three reviews
+#assertCurl 200 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS $AUTH -s"
+#assertEqual "$MOV_ID_REVS_RECS" $(echo $RESPONSE | jq .movieId) "$ID_CONFIRMATION"
+#assertEqual 3 $(echo $RESPONSE | jq ".recommendations  | length") "$RECOMMENDATIONS_CONFIRMATION"
+#assertEqual 1 $(echo $RESPONSE | jq ".reviews | length") "$REVIEWS_CONFIRMATION"
 #
-READER_AUTH="-H \"Authorization: Bearer $READER_ACCESS_TOKEN\""
+## Verify that a 404 (Not Found) error is returned for a non existing movieId ($MOV_ID_NOT_FOUND)
+#assertCurl 404 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_NOT_FOUND $AUTH -s"
 #
-assertCurl 200 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS $READER_AUTH -s"
-assertCurl 403 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS $READER_AUTH -X DELETE -s"
+## Verify that no recommendations are returned for movieId $MOV_ID_NO_RECS
+#assertCurl 200 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_NO_RECS $AUTH -s"
+#assertEqual "$MOV_ID_NO_RECS" $(echo $RESPONSE | jq .movieId) "$ID_CONFIRMATION"
+#assertEqual 0 $(echo $RESPONSE | jq ".recommendations | length") "$RECOMMENDATIONS_CONFIRMATION"
+#assertEqual 3 $(echo $RESPONSE | jq ".reviews | length") "$REVIEWS_CONFIRMATION"
+#
+## Verify that no reviews are returned for movieId $MOV_ID_NO_REVS
+#assertCurl 200 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_NO_REVS $AUTH -s"
+#assertEqual $MOV_ID_NO_REVS $(echo $RESPONSE | jq .movieId) "$ID_CONFIRMATION"
+#assertEqual 3 $(echo $RESPONSE | jq ".recommendations | length") "$RECOMMENDATIONS_CONFIRMATION"
+#assertEqual 0 $(echo $RESPONSE | jq ".reviews | length") "$REVIEWS_CONFIRMATION"
+#
+### Verify that a request without access token fails on 401, Unauthorized
+#assertCurl 401 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS -s"
+#
+### Verify that the reader - client with only read scope can call the read API but not delete API.
+#READER_ACCESS_TOKEN=$(curl -k https://reader:secret@$HOST:$PORT/oauth/token -d grant_type=password -d username=user -d password=password -s | jq .access_token -r)
+##
+###Testing with an OpenID Connect provider – Auth0
+###SCOPE="movie:read"
+###read $READER_ACCESS_TOKEN < <(./get-access-token.bash $SCOPE)
+###AUTH="-H \"Authorization: Bearer $READER_ACCESS_TOKEN\""
+##
+#READER_AUTH="-H \"Authorization: Bearer $READER_ACCESS_TOKEN\""
+##
+#assertCurl 200 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS $READER_AUTH -s"
+#assertCurl 403 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS $READER_AUTH -X DELETE -s"
 
 testCircuitBreaker
 
@@ -319,43 +319,3 @@ if [[ $@ == *"stop"* ]]; then
   echo "$ docker-compose down --remove-orphans"
   docker-compose down --remove-orphans
 fi
-
-#     -------------------------
-#     | JSON examples for curl|
-#     -------------------------
-#
-#
-#    body=\
-#'{"movieId":3331,"genre":"product 1","title":"lalalla", "recommendations":[
-#        {"recommendationId":3211,"author":"author 1","rate":1,"content":"content 1"},
-#        {"recommendationId":9911,"author":"author 2","rate":2,"content":"content 2"},
-#        {"recommendationId":9931,"author":"author 3","rate":3,"content":"content 3"}
-#    ], "reviews":[
-#        {"reviewId":4511,"author":"author 1","subject":"subject 1","content":"content 1"},
-#        {"reviewId":4711,"author":"author 2","subject":"subject 2","content":"content 2"},
-#        {"reviewId":7511,"author":"author 3","subject":"subject 3","content":"content 3"}
-#    ]}'
-#
-#    body=\
-#'{"movieId":333,"genre":"product 1","title":"lalalla", "recommendations":[
-#        {"recommendationId":321,"author":"author 1","rate":1,"content":"content 1"},
-#        {"recommendationId":991,"author":"author 2","rate":2,"content":"content 2"},
-#        {"recommendationId":993,"author":"author 3","rate":3,"content":"content 3"}
-#    ], "reviews":[
-#        {"reviewId":451,"author":"author 1","subject":"subject 1","content":"content 1"}
-#    ]}'
-
-#    body=\
-#'{"movieId":334,"genre":"product 1","title":"lalalla", "recommendations":[], "reviews":[]}'
-
-#    body=\
-#'{"movieId":335,"genre":"product 1","title":"lalalla", "recommendations":[
-#        {"recommendationId":321,"author":"author 1","rate":1,"content":"content 1"}
-#    ], "reviews":[]}'
-
-#    body=\
-#'{"movieId":336,"genre":"product 1","title":"lalalla", "recommendations":[
-#        {"recommendationId":3211,"author":"author 1","rate":1,"content":"content 1"}
-#    ], "reviews":[
-#        {"reviewId":4511,"author":"author 1","subject":"subject 1","content":"content 1"}
-#    ]}'
