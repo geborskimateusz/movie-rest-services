@@ -32,9 +32,9 @@ public class BaseMovieService implements MovieService {
 
     @Override
     public Mono<Movie> getMovie(Integer movieId, int delay, int faultPercent) {
+        if (movieId < 1) throw new InvalidInputException("Invalid movieId: " + movieId);
         if (delay > 0) simulateDelay(delay);
         if (faultPercent > 0) throwErrorIfBadLuck(faultPercent);
-        if (movieId < 1) throw new InvalidInputException("Invalid movieId: " + movieId);
 
         return movieRepository.findByMovieId(movieId)
                 .switchIfEmpty(Mono.error(new NotFoundException("No movie found for movieId: " + movieId)))
@@ -71,6 +71,11 @@ public class BaseMovieService implements MovieService {
                 .block();
     }
 
+
+    /**
+     * Private methods to simulate CircuitBreaker activation
+     */
+
     private void throwErrorIfBadLuck(int faultPercent) {
         int randomThreshold = getRandomNumber(1, 100);
         if (faultPercent < randomThreshold) {
@@ -97,6 +102,7 @@ public class BaseMovieService implements MovieService {
         try {
             Thread.sleep(delay * 1000);
         } catch (InterruptedException e) {
+            //do nothing
         }
         log.info("Moving on..");
     }

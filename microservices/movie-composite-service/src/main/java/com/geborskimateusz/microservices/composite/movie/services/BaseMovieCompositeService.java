@@ -70,7 +70,7 @@ public class BaseMovieCompositeService implements MovieCompositeService {
     private Movie getMovieFallbackValue(Integer movieId) {
         log.warn("Creating fallback movie for movieId {}", movieId);
         if (movieId == 13) {
-            String errMsg = "Moviw Id: " + movieId + " not found in fallback cache!";
+            String errMsg = "Movie Id: " + movieId + " not found in fallback cache!";
             log.warn(errMsg);
             throw new NotFoundException(errMsg);
         }
