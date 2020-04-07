@@ -234,6 +234,24 @@ function testCircuitBreaker() {
     assertEqual "CircuitBreaker 'movie' is open" "${message:0:57}"
   done
 
+  echo "Will sleep for 10 sec waiting for the CB to go Half Open..."
+  sleep 10
+
+  #Verify that circuit breaker is closed via health endpoint
+  assertEqual "HALF_OPEN" "$($EXEC wget movie-composite:8080/actuator/health -qO - | jq -r .components.movieCircuitBreaker.details.state)" "Verify that circuit breaker has status CLOSED"
+
+  #Regular calls to close Circuit Breaker
+  for ((i = 0; i < 3; i++)); do
+    assertCurl 200 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS $AUTH -s"
+  done
+
+  #Verify that circuit breaker is closed again
+  assertEqual "CLOSED" "$($EXEC wget movie-composite:8080/actuator/health -qO - | jq -r .components.movieCircuitBreaker.details.state)" "Verify that circuit breaker is CLOSED again"
+
+  # Verify that the expected state transitions happened in the circuit breaker
+  assertEqual "CLOSED_TO_OPEN" "$($EXEC wget movie-composite:8080/actuator/circuitbreakerevents/movie/STATE_TRANSITION -qO - | jq -r .circuitBreakerEvents[-3].stateTransition)" "Verify CLOSED_TO_OPEN"
+  assertEqual "OPEN_TO_HALF_OPEN" "$($EXEC wget movie-composite:8080/actuator/circuitbreakerevents/movie/STATE_TRANSITION -qO - | jq -r .circuitBreakerEvents[-2].stateTransition)" "Verify OPEN_TO_HALF_OPEN"
+  assertEqual "HALF_OPEN_TO_CLOSED" "$($EXEC wget movie-composite:8080/actuator/circuitbreakerevents/movie/STATE_TRANSITION -qO - | jq -r .circuitBreakerEvents[-1].stateTransition)" "Verify HALF_OPEN_TO_CLOSED"
 }
 
 set -e
@@ -264,51 +282,51 @@ ACCESS_TOKEN=$(curl -k https://writer:secret@$HOST:$PORT/oauth/token -d grant_ty
 
 AUTH="-H \"Authorization: Bearer $ACCESS_TOKEN\""
 
-#setupData
+setupData
 
 waitForMessageProcessing
 
-##  Test messages
-#ID_CONFIRMATION="Comparing id's."
-#RECOMMENDATIONS_CONFIRMATION="Comparing recommendations length."
-#REVIEWS_CONFIRMATION="Comparing reviews length."
-#
-## Verify that a normal request works, expect three recommendations and three reviews
-#assertCurl 200 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS $AUTH -s"
-#assertEqual "$MOV_ID_REVS_RECS" $(echo $RESPONSE | jq .movieId) "$ID_CONFIRMATION"
-#assertEqual 3 $(echo $RESPONSE | jq ".recommendations  | length") "$RECOMMENDATIONS_CONFIRMATION"
-#assertEqual 1 $(echo $RESPONSE | jq ".reviews | length") "$REVIEWS_CONFIRMATION"
-#
-## Verify that a 404 (Not Found) error is returned for a non existing movieId ($MOV_ID_NOT_FOUND)
-#assertCurl 404 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_NOT_FOUND $AUTH -s"
-#
-## Verify that no recommendations are returned for movieId $MOV_ID_NO_RECS
-#assertCurl 200 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_NO_RECS $AUTH -s"
-#assertEqual "$MOV_ID_NO_RECS" $(echo $RESPONSE | jq .movieId) "$ID_CONFIRMATION"
-#assertEqual 0 $(echo $RESPONSE | jq ".recommendations | length") "$RECOMMENDATIONS_CONFIRMATION"
-#assertEqual 3 $(echo $RESPONSE | jq ".reviews | length") "$REVIEWS_CONFIRMATION"
-#
-## Verify that no reviews are returned for movieId $MOV_ID_NO_REVS
-#assertCurl 200 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_NO_REVS $AUTH -s"
-#assertEqual $MOV_ID_NO_REVS $(echo $RESPONSE | jq .movieId) "$ID_CONFIRMATION"
-#assertEqual 3 $(echo $RESPONSE | jq ".recommendations | length") "$RECOMMENDATIONS_CONFIRMATION"
-#assertEqual 0 $(echo $RESPONSE | jq ".reviews | length") "$REVIEWS_CONFIRMATION"
-#
-### Verify that a request without access token fails on 401, Unauthorized
-#assertCurl 401 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS -s"
-#
-### Verify that the reader - client with only read scope can call the read API but not delete API.
-#READER_ACCESS_TOKEN=$(curl -k https://reader:secret@$HOST:$PORT/oauth/token -d grant_type=password -d username=user -d password=password -s | jq .access_token -r)
-##
-###Testing with an OpenID Connect provider – Auth0
-###SCOPE="movie:read"
-###read $READER_ACCESS_TOKEN < <(./get-access-token.bash $SCOPE)
-###AUTH="-H \"Authorization: Bearer $READER_ACCESS_TOKEN\""
-##
-#READER_AUTH="-H \"Authorization: Bearer $READER_ACCESS_TOKEN\""
-##
-#assertCurl 200 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS $READER_AUTH -s"
-#assertCurl 403 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS $READER_AUTH -X DELETE -s"
+#  Test messages
+ID_CONFIRMATION="Comparing id's."
+RECOMMENDATIONS_CONFIRMATION="Comparing recommendations length."
+REVIEWS_CONFIRMATION="Comparing reviews length."
+
+# Verify that a normal request works, expect three recommendations and three reviews
+assertCurl 200 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS $AUTH -s"
+assertEqual "$MOV_ID_REVS_RECS" $(echo $RESPONSE | jq .movieId) "$ID_CONFIRMATION"
+assertEqual 3 $(echo $RESPONSE | jq ".recommendations  | length") "$RECOMMENDATIONS_CONFIRMATION"
+assertEqual 1 $(echo $RESPONSE | jq ".reviews | length") "$REVIEWS_CONFIRMATION"
+
+# Verify that a 404 (Not Found) error is returned for a non existing movieId ($MOV_ID_NOT_FOUND)
+assertCurl 404 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_NOT_FOUND $AUTH -s"
+
+# Verify that no recommendations are returned for movieId $MOV_ID_NO_RECS
+assertCurl 200 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_NO_RECS $AUTH -s"
+assertEqual "$MOV_ID_NO_RECS" $(echo $RESPONSE | jq .movieId) "$ID_CONFIRMATION"
+assertEqual 0 $(echo $RESPONSE | jq ".recommendations | length") "$RECOMMENDATIONS_CONFIRMATION"
+assertEqual 3 $(echo $RESPONSE | jq ".reviews | length") "$REVIEWS_CONFIRMATION"
+
+# Verify that no reviews are returned for movieId $MOV_ID_NO_REVS
+assertCurl 200 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_NO_REVS $AUTH -s"
+assertEqual $MOV_ID_NO_REVS $(echo $RESPONSE | jq .movieId) "$ID_CONFIRMATION"
+assertEqual 3 $(echo $RESPONSE | jq ".recommendations | length") "$RECOMMENDATIONS_CONFIRMATION"
+assertEqual 0 $(echo $RESPONSE | jq ".reviews | length") "$REVIEWS_CONFIRMATION"
+
+## Verify that a request without access token fails on 401, Unauthorized
+assertCurl 401 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS -s"
+
+## Verify that the reader - client with only read scope can call the read API but not delete API.
+READER_ACCESS_TOKEN=$(curl -k https://reader:secret@$HOST:$PORT/oauth/token -d grant_type=password -d username=user -d password=password -s | jq .access_token -r)
+
+##Testing with an OpenID Connect provider – Auth0
+##SCOPE="movie:read"
+##read $READER_ACCESS_TOKEN < <(./get-access-token.bash $SCOPE)
+##AUTH="-H \"Authorization: Bearer $READER_ACCESS_TOKEN\""
+
+READER_AUTH="-H \"Authorization: Bearer $READER_ACCESS_TOKEN\""
+
+assertCurl 200 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS $READER_AUTH -s"
+assertCurl 403 "curl -k https://$HOST:$PORT/movie-composite/$MOV_ID_REVS_RECS $READER_AUTH -X DELETE -s"
 
 testCircuitBreaker
 
