@@ -60,10 +60,6 @@ api:
                 This means that a delete request of a non existing movie will return <b>200 Ok</b>.
 server.port: 7000
 
-ribbon.ServerListRefreshInterval: 5000
-
-ribbon.NFLoadBalancerPingInterval: 5
-
 spring.cloud.stream:
   defaultBinder: rabbit
   default.contentType: application/json
@@ -81,27 +77,41 @@ spring.cloud.stream:
       producer:
         required-groups: auditGroup
 
-spring.security.oauth2.resourceserver.jwt.jwk-set-uri: http://${app.auth-server}:9999/.well-known/jwks.json
+spring.security.oauth2.resourceserver.jwt.jwk-set-uri: http://${app.auth-server}/.well-known/jwks.json
 
-#OAuth
-#spring.security.oauth2.resourceserver.jwt.issuer-uri: https://dev-3cs7odlv.eu.auth0.com/
+app.movie-service.timeoutSec: 2
+
+resilience4j.retry:
+  backends:
+    product:
+      maxRetryAttempts: 3
+      waitDuration: 1000
+      retryExceptions:
+        - org.springframework.web.reactive.function.client.WebClientResponseException$InternalServerError
+
+resilience4j.circuitBreaker:
+  backends:
+    product:
+      registerHealthIndicator: true
+      ringBufferSizeInClosedState: 5
+      failureRateTreshold: 50
+      waitInterval: 10000
+      ringBufferSizeInHalfOpenState: 3
+      automaticTransitionFromOpenToHalfOpenEnabled: true
+      ignoreExceptions:
+        - com.geborskimateusz.util.exceptions.InvalidInputException
+        - com.geborskimateusz.util.exceptions.NotFoundException
 
 logging:
   level:
     root: INFO
-    se.magnus: DEBUG
+    com.geborskimateusz: DEBUG
     org.springframework.web.server.adapter.HttpWebHandlerAdapter: TRACE
 
-management.endpoint.health.show-details: "ALWAYS"
-management.endpoints.web.exposure.include: "*"
-management:
-  health:
-    defaults:
-      enabled=false:
 ---
 spring.profiles: docker
 
-server.port: 8080
+server.port: 80
 
 ---
 spring.profiles: streaming_partitioned
@@ -119,7 +129,10 @@ spring.cloud.stream.bindings.output-reviews.producer:
   partition-count: 2
 
 ---
-spring.profiles: kafka
+spring.profiles: prod
 
-management.health.rabbit.enabled: false
-spring.cloud.stream.defaultBinder: kafka
+logging:
+  level:
+    root: WARN
+    com.geborskimateusz: WARN
+    org.springframework.web.server.adapter.HttpWebHandlerAdapter: WARN
