@@ -7,7 +7,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-        properties = {"eureka.client.enabled=false", "spring.cloud.config.enabled=false"})
+        properties = {"spring.cloud.config.enabled=false"})
 class GatewayApplicationTests {
 
     @Test
