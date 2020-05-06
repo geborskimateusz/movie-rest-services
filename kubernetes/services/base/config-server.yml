@@ -1,29 +1,29 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: auth-server
+  name: config-server
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: auth-server
+      app: config-server
   template:
     metadata:
       labels:
-        app: auth-server
+        app: config-server
     spec:
       containers:
-        - name: auth-server
-          image: hands-on/auth-server
+        - name: config-server
+          image: hands-on/config-server
           imagePullPolicy: Never
           env:
             - name: SPRING_PROFILES_ACTIVE
-              value: "docker"
+              value: "docker,native"
           envFrom:
             - secretRef:
-                name: config-client-credentials
+                name: config-server-secrets
           ports:
-            - containerPort: 80
+            - containerPort: 8888
           resources:
             limits:
               memory: 350Mi
@@ -31,7 +31,7 @@ spec:
             httpGet:
               scheme: HTTP
               path: /actuator/info
-              port: 80
+              port: 8888
             initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 2
@@ -41,20 +41,26 @@ spec:
             httpGet:
               scheme: HTTP
               path: /actuator/health
-              port: 80
+              port: 8888
             initialDelaySeconds: 10
             periodSeconds: 10
             timeoutSeconds: 2
             failureThreshold: 3
             successThreshold: 1
+          volumeMounts:
+            - name: config-repo-volume
+              mountPath: /config-repo
+      volumes:
+        - name: config-repo-volume
+          configMap:
+            name: config-repo
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: auth-server
+  name: config-server
 spec:
   selector:
-    app: auth-server
+    app: config-server
   ports:
-    - port: 80
-      targetPort: 80
+    - port: 8888
