@@ -9,3 +9,4 @@
 ## How to:
 1. Download whole repository.
 2. In root folder run command `./recreate-docker-env.bash` 
+cker
